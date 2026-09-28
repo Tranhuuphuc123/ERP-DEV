@@ -1,0 +1,29 @@
+*************************TIỀM HIỂU VỀ SELECT INTO TRONG SQL************************
+>>>KHÁI NIỆM:
+ - Trong SQL, câu lệnh SELECT INTO được sử dụng để sao chép dữ liệu từ một bảng hoặc truy vấn kết quả
+ vào một bảng mới hoặc bảng đã tồn tại. Câu lệnh này không chỉ giúp bạn truy vấn dữ liệu từ một nguồn
+ và chuyển đến một đích mới mà còn có thể được sử dụng để tạo bảng mới từ kết quả của một truy vấn.
+
+************************************************
+>>>SYNTAX:
+
+
+        SELECT *
+        INTO new_table
+        FROM original_table;
+
+        + trong đó:
+          ++ new_table: tên bảng mới sẽ đc tạo và lưu trữ
+          ++ originnal_table: bảng gốc muốn sao chép qua
+
+
+>>>> DEMO:
+ => vd:
+-- Tạo bảng mới và sao chép kết quả của truy vấn vào bảng mới
+
+        SELECT column1, column2
+        INTO new_table
+        FROM source_table
+        WHERE some_condition;
+       
+         

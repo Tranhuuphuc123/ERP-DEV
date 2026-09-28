@@ -1,0 +1,194 @@
+================================================================================
+KẾT CẤU VÀ KIẾN THỨC TOÀN DIỆN VỀ TRIGGER TRONG CƠ SỞ DỮ LIỆU
+(Trọng tâm: Oracle PL/SQL | So sánh: SQL Server & MySQL)
+================================================================================
+
+I. KHÁI NIỆM VÀ TỔNG QUAN VỀ TRIGGER
+--------------------------------------------------------------------------------
+1. Khái niệm:
+   - Trigger (Cò tự động) là một đoạn mã T-SQL / PL/SQL tự động thi hành (fire/execute) 
+     khi xảy ra một sự kiện cụ thể trên cơ sở dữ liệu (như DML: INSERT, UPDATE, DELETE 
+     hoặc DDL: CREATE, ALTER, DROP, hoặc sự kiện hệ thống).
+   - Trigger không thể gọi trực tiếp bằng câu lệnh EXEC hay CALL như Stored Procedure, 
+     mà hoàn toàn dựa vào sự kiện kích hoạt.
+
+2. Phân loại Trigger:
+   - DML Trigger: Kích hoạt bởi thao tác dữ liệu (INSERT, UPDATE, DELETE).
+   - DDL Trigger: Kích hoạt bởi thao tác định nghĩa bảng/hệ thống (CREATE, ALTER, DROP).
+   - Database Event / System Trigger: Kích hoạt khi Logon, Shutdown, Startup, Error...
+
+3. Phân cấp mức độ thực thi:
+   - Row-Level Trigger (Mức dòng): Chạy lặp lại cho MỖI dòng dữ liệu bị tác động (FOR EACH ROW).
+   - Statement-Level Trigger (Mức lệnh): Chạy DUY NHẤT 1 lần cho cả câu lệnh SQL, bất kể tác động
+   bao nhiêu dòng.
+
+4. Ưu và nhược điểm:
+   - Ưu điểm: Đảm bảo ràng buộc toàn vẹn phức tạp, tự động ghi log audit, kiểm tra an ninh dữ liệu, 
+   đồng bộ hóa tự động.
+   - Nhược điểm: Khó debug, giảm hiệu năng nếu lạm dụng, có thể gây ra hiện tượng kích hoạt chuỗi 
+   (Cascading triggers) hoặc deadlock.
+--------------------------------------------------------------------------------
+
+
+II. TRIGGER TRONG ORACLE PL/SQL (TRỌNG TÂM)
+--------------------------------------------------------------------------------
+1. Các loại Trigger trong Oracle:
+   - DML Triggers: BEFORE / AFTER / INSTEAD OF (Row level & Statement level).
+   - Compound Triggers: Gộp cả BEFORE/AFTER Row & Statement vào 1 Trigger để tránh lỗi Mutating Table (ORA-04091).
+   - System / DDL Triggers: Gắn liền với SCHEMA hoặc DATABASE.
+
+2. Biến giả (Pseudo-records) trong Oracle:
+   - :NEW  : Chứa giá trị MỚI của dòng (Có trong INSERT, UPDATE).
+   - :OLD  : Chứa giá trị CŨ của dòng (Có trong UPDATE, DELETE).
+   - Lưu ý: Cần có dấu hai chấm (:) phía trước khi tham chiếu trong đoạn mã PL/SQL.
+
+3. Cú pháp chuẩn trong Oracle (DML Trigger):
+
+   CREATE OR REPLACE TRIGGER name_of_trigger
+   {BEFORE | AFTER | INSTEAD OF} {INSERT | UPDATE | DELETE}
+   ON table_or_view_name
+   [FOR EACH ROW]
+   [WHEN (condition)]
+   DECLARE
+      -- Khai báo biến
+   BEGIN
+      -- Mã xử lý PL/SQL
+   EXCEPTION
+      -- Xử lý ngoại lệ
+   END;
+   /
+
+4. Ví dụ minh họa trong Oracle PL/SQL:
+
+   a. DML Row-Level Trigger (Ghi log thay đổi lương nhân viên):
+   ------------------------------------------------------------
+   CREATE OR REPLACE TRIGGER trg_audit_emp_salary
+   AFTER UPDATE OF salary ON employees
+   FOR EACH ROW
+   WHEN (NEW.salary <> OLD.salary)
+   BEGIN
+      INSERT INTO salary_audit_log (emp_id, old_salary, new_salary, change_date)
+      VALUES (:OLD.employee_id, :OLD.salary, :NEW.salary, SYSDATE);
+   END;
+   /
+
+   b. DML Statement-Level Trigger (Chặn thao tác dữ liệu ngoài giờ hành chính):
+   ---------------------------------------------------------------------------
+   CREATE OR REPLACE TRIGGER trg_restrict_emp_changes
+   BEFORE INSERT OR UPDATE OR DELETE ON employees
+   BEGIN
+      IF (TO_CHAR(SYSDATE, 'HH24') NOT BETWEEN '08' AND '17') OR
+         (TO_CHAR(SYSDATE, 'DY', 'NLS_DATE_LANGUAGE=ENGLISH') IN ('SAT', 'SUN')) THEN
+         RAISE_APPLICATION_ERROR(-20001, 'Chi duoc phep thao tac du lieu trong gio hanh chinh!');
+      END IF;
+   END;
+   /
+
+   c. INSTEAD OF Trigger trên View (Chèn dữ liệu vào View nhiều bảng):
+   -------------------------------------------------------------------
+   CREATE OR REPLACE TRIGGER trg_iov_emp_dept
+   INSTEAD OF INSERT ON v_employee_details
+   FOR EACH ROW
+   BEGIN
+      INSERT INTO employees (employee_id, first_name, department_id)
+      VALUES (:NEW.emp_id, :NEW.first_name, :NEW.dept_id);
+   END;
+   /
+--------------------------------------------------------------------------------
+
+
+III. TRIGGER TRONG SQL SERVER (T-SQL)
+--------------------------------------------------------------------------------
+1. Đặc điểm chính trong SQL Server:
+   - Mặc định DML Trigger trong SQL Server luôn là STATEMENT-LEVEL (không có mệnh đề 
+   FOR EACH ROW như Oracle/MySQL).
+   - Để xử lý theo dòng, SQL Server sử dụng 2 BẢNG TẠM BỘ NHỚ (Logical Tables):
+     + inserted: Chứa dữ liệu vừa được INSERT hoặc dữ liệu MỚI sau khi UPDATE.
+     + deleted : Chứa dữ liệu vừa bị DELETE hoặc dữ liệu CŨ trước khi UPDATE.
+
+2. Các loại Trigger trong SQL Server:
+   - AFTER / FOR Trigger: Chạy sau khi các ràng buộc (Constraints) được kiểm tra.
+   - INSTEAD OF Trigger: Chạy thay thế hoàn toàn cho câu lệnh DML.
+
+3. Cú pháp chuẩn trong SQL Server:
+
+   CREATE TRIGGER schema_name.trigger_name
+   ON table_or_view_name
+   { AFTER | FOR | INSTEAD OF } { INSERT , UPDATE , DELETE }
+   AS
+   BEGIN
+       SET NOCOUNT ON;
+       -- Mã T-SQL xử lý tập dữ liệu dựa trên bảng inserted và deleted
+   END;
+
+4. Ví dụ minh họa trong SQL Server:
+
+   Ghi log lịch sử cập nhật giá sản phẩm (xử lý theo tập dữ liệu/multi-rows):
+
+   CREATE TRIGGER trg_AuditProductPrice
+   ON Products
+   AFTER UPDATE
+   AS
+   BEGIN
+       SET NOCOUNT ON;
+       IF UPDATE(Price)
+       BEGIN
+           INSERT INTO ProductPriceLog (ProductID, OldPrice, NewPrice, ModifiedDate)
+           SELECT d.ProductID, d.Price, i.Price, GETDATE()
+           FROM deleted d
+           JOIN inserted i ON d.ProductID = i.ProductID
+           WHERE d.Price <> i.Price;
+       END
+   END;
+--------------------------------------------------------------------------------
+
+
+IV. TRIGGER TRONG MYSQL
+--------------------------------------------------------------------------------
+1. Đặc điểm chính trong MySQL:
+   - MySQL bắt buộc mọi DML Trigger đều phải là ROW-LEVEL (luôn đi kèm FOR EACH ROW).
+   - Sử dụng từ khóa OLD và NEW (KHÔNG có dấu hai chấm ":" đằng trước như Oracle).
+   - MySQL không hỗ trợ INSTEAD OF Trigger trên View.
+   - Một bảng có thể có tối đa 6 Trigger cơ bản (BEFORE/AFTER cho INSERT, UPDATE, DELETE).
+
+2. Cú pháp chuẩn trong MySQL:
+
+   DELIMITER //
+   CREATE TRIGGER trigger_name
+   { BEFORE | AFTER } { INSERT | UPDATE | DELETE }
+   ON table_name
+   FOR EACH ROW
+   BEGIN
+       -- Mã SQL / Stored Procedure
+   END;
+   //
+   DELIMITER ;
+
+3. Ví dụ minh họa trong MySQL:
+
+   Tự động kiểm tra và gán số lượng tồn kho tối thiểu trước khi INSERT:
+
+   DELIMITER //
+   CREATE TRIGGER trg_before_insert_product
+   BEFORE INSERT ON products
+   FOR EACH ROW
+   BEGIN
+       IF NEW.quantity < 0 THEN
+           SET NEW.quantity = 0;
+       END IF;
+   END;
+   //
+   DELIMITER ;
+--------------------------------------------------------------------------------
+
+
+V. BẢNG SO SÁNH TỔNG HỢP (ORACLE vs SQL SERVER vs MYSQL)
+--------------------------------------------------------------------------------
+Tiêu chí           | Oracle PL/SQL         | SQL Server (T-SQL)    | MySQL
+-------------------|-----------------------|-----------------------|-----------------------
+Phân cấp thực thi  | Row & Statement Level | Statement Level       | Row Level (Bắt buộc)
+Tham chiếu Cũ/Mới  | :OLD và :NEW          | Bảng deleted, inserted| OLD và NEW (Không có :)
+INSTEAD OF Trigger | Có (Trên View)        | Có (Bảng và View)     | Không hỗ trợ
+Tránh lỗi Mutating | Có (Compound Trigger) | Bảng tạm bộ nhớ       | Hạn chế truy vấn bảng đang trigger
+Cú pháp kết thúc   | Kết thúc bằng /       | Kết thúc bình thường  | Cần đổi DELIMITER // ... //
+--------------------------------------------------------------------------------

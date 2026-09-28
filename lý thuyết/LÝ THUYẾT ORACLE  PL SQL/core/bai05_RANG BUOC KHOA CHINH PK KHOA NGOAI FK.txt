@@ -1,0 +1,162 @@
+*****************************************************************************************
+ >>>> THIẾT LẬP KHÓA CHÍNH (PRIMARY KEY) và KHÓA NGOẠI (FOREIGN KEY) TRONG ORACLE SQL<<<<
+*****************************************************************************************
+
+>> C1: THIẾT LẬP TRỰC TIẾP KHI CREATE TABLE
+   - Cấu trúc: 
+     id NUMBER NOT NULL PRIMARY KEY
+   - Lưu ý cho Oracle: Thường kết hợp với cơ chế GENERATED ALWAYS AS IDENTITY 
+     (từ bản 12c trở lên) để làm cột tự tăng chuẩn xác.
+
+>> C2: THIẾT LẬP SAU KHI ĐÃ TẠO BẢNG (Dùng ALTER TABLE)
+   - Cấu trúc: 
+   
+			ALTER TABLE ten_bang ADD PRIMARY KEY (ten_cot);
+			
+   ** Bản chất Oracle**: 
+     => Lệnh ALTER TABLE thuộc nhóm DDL (Data Definition Language). 
+	 => Riêng đối với câu lệnh CREATE TABLE (và các lệnh chỉnh sửa cấu trúc bảng như 
+	 ALTER, DROP), bạn KHÔNG CẦN gõ lệnh COMMIT. Khi chạy, Oracle sẽ TỰ ĐỘNG COMMIT 
+	 NGẦM hệ thống. Bạn không cần gõ thêm lệnh COMMIT; bằng tay để xác nhận.
+	 (Lý do cực kỳ đơn giản: Oracle có cơ chế Auto-Commit (Commit tự động) đối với 
+	 nhóm lệnh này.)
+
+>> C3: KHAI BÁO PRIMARY KEY Ở CUỐI LỆNH CREATE TABLE
+   - Cấu trúc: 
+   
+			PRIMARY KEY (id)  -- được viết độc lập ở dòng cuối cùng trong 
+			
+     dấu ngoặc ( ) của câu lệnh CREATE TABLE.
+	 
+	- EX:
+
+		CREATE TABLE USERS(
+			 id NUMBER GENERATED ALWAYS AS IDENTITY,
+			 name VARCHAR(50) NOT NULL,
+			 email VARCHAR(100) NOT NULL,
+			 PRIMARY KEY(ID)
+		); 
+
+>> C4: CÁCH PHỔ BIẾN - DÙNG CONSTRAINT ĐỂ ĐẶT TÊN QUẢN LÝ (CỰC KỲ KHUYÊN DÙNG)
+   - Mục đích: Đặt một cái tên tường minh, có nghĩa cho khóa chính nhằm phục vụ 
+     cho việc tra cứu log lỗi hệ thống, Xóa (Drop) hoặc Vô hiệu hóa (Disable) khóa.
+   
+   > C4_1: Khai báo ngay khi tạo bảng:
+     CONSTRAINT PK_USERS PRIMARY KEY (id)
+   
+   > C4_2: Khai báo sau khi tạo bảng:
+     ALTER TABLE users ADD CONSTRAINT PK_USERS PRIMARY KEY (id);
+
+   - Đặc trưng của Oracle: Oracle quản lý mọi đối tượng qua tên định danh (Identifier). 
+     Nếu bạn không chủ động đặt tên Constraint, Oracle sẽ tự sinh ra các chuỗi vô nghĩa 
+     như 'SYS_C0012345', cực kỳ khó quản trị khi hệ thống phình to.
+	 
+	- EX:
+
+		CREATE TABLE USERS(
+			 id NUMBER GENERATED ALWAYS AS IDENTITY,
+			 name VARCHAR(50) NOT NULL,
+			 email VARCHAR(100) NOT NULL,
+			 CONSTRAINT PK_USERS PRIMARY KEY(ID)
+		); 
+
+********************************************************************************
+>>> THIẾT LẬP KHÓA NGOẠI (FOREIGN KEY) TRONG ORACLE SQL
+********************************************************************************
+
+1. ĐỊNH NGHĨA: 
+   - Là một hoặc nhiều cột của bảng Con tham chiếu đến Khóa chính của bảng Cha 
+     nhằm đảm bảo quy tắc toàn vẹn dữ liệu (không cho phép con mồ côi).
+
+2. CÁCH THIẾT LẬP:
+
+   ● KHAI BÁO TRONG CREATE TABLE:
+     
+	 FOREIGN KEY (user_id) REFERENCES users(id)
+	 
+	 - EX: tạo table Employees lk khóa ngoại với table Users
+	 
+		  CREATE TABLE Employees (
+			id NUMBER GENERATED ALWAYS AS IDENTITY,
+			name VARCHAR2(50) NOT NULL,             
+			email VARCHAR2(100) NOT NULL,          
+			user_id NUMBER,
+			CONSTRAINT PK_EMPLOYEES PRIMARY KEY(id), 
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		   );
+			
+			--> lưu ý: không cần Lệnh COMMIT nha, vì khối lệnh alter table, create table, drop.. 
+			Oracle tự auto commit
+			
+
+   ● DÙNG CONSTRAINT CŨNG TRONG CREATE TABLE (KHUYẾN NGHỊ):
+     
+		ALTER TABLE orders ADD CONSTRAINT FK_ORDERS_USERS 
+		FOREIGN KEY (user_id) REFERENCES users(id);
+		
+		- EX
+		
+			CREATE TABLE Employees (
+				id NUMBER GENERATED ALWAYS AS IDENTITY,
+				name VARCHAR2(50) NOT NULL,             
+				email VARCHAR2(100) NOT NULL,          
+				user_id NUMBER,
+				CONSTRAINT PK_EMPLOYEES PRIMARY KEY(id), 
+				CONSTRAINT FK_EMPLOYEES_USERS FOREIGN KEY (user_id) REFERENCES USERS(id)
+			 );
+			
+			--> lưu ý: không cần Lệnh COMMIT nha, vì khối lệnh alter table, create table, drop.. 
+			Oracle tự auto commit
+		
+   ● KHAI BÁO DÙNG CONSTRAINT CŨNG SAU KHI CREATE TABLE (CÁCH TỐT NHẤT):	
+   
+		ALTER TABLE users ADD CONSTRAINT FK_EMPLOYEES_USERS FOREIGN KEY (user_id) REFERENCES USERS(id)
+
+3. ĐẶC ĐIỂM KHẮT KHE CỦA ORACLE:
+   - Kiểu dữ liệu và độ dài của cột Khóa ngoại (ở bảng con) PHẢI trùng khớp 100% 
+     với cột Khóa chính (bên bảng cha). Ví dụ: Bên cha là NUMBER thì bên con phải là NUMBER.
+   - Oracle hỗ trợ cơ chế "ON DELETE CASCADE" (Xóa dữ liệu cha thì các bản ghi con 
+     liên quan tự động bị xóa theo) giúp quản lý dữ liệu sạch sẽ, tránh nghẽn luồng.
+
+********************************************************************************
+>>> XÓA / VÔ HIỆU HÓA KHÓA (PRIMARY & FOREIGN KEY) TRONG ORACLE
+********************************************************************************
+
+1. XÓA KHÓA (DROP CONSTRAINT - Xóa vĩnh viễn):
+   - Cú pháp chung cho mọi loại khóa: 
+   
+		ALTER TABLE ten_bang DROP CONSTRAINT ten_rang_buoc;
+		
+   - Lưu ý đặc biệt: Nếu bạn xóa một Khóa chính (Primary Key) đang được bảng khác 
+     tham chiếu làm khóa ngoại, Oracle sẽ chặn lại và báo lỗi. Để ép xóa, bạn phải 
+     dùng thêm từ khóa CASCADE ở cuối:
+	 
+		ALTER TABLE ten_bang DROP CONSTRAINT pk_name CASCADE;
+
+2. VÔ HIỆU HÓA (DISABLE) & KÍCH HOẠT LẠI (ENABLE) CONSTRAINT:
+   (Đây là tính năng cực kỳ đắt giá của Oracle trong các hệ thống lớn như ERP/Core-Banking. 
+    Khi cần Import hàng triệu dòng dữ liệu vào DB, người ta sẽ tắt khóa tạm thời 
+    để hệ thống không phải tốn thời gian kiểm tra, giúp nạp dữ liệu siêu tốc, 
+    sau đó bật lại).
+
+   ● LỆNH VÔ HIỆU HÓA (Tắt tạm thời):
+   
+		ALTER TABLE ten_bang DISABLE CONSTRAINT ten_rang_buoc;
+
+   ● LỆNH KÍCH HOẠT LẠI (Bật lại):
+   
+		ALTER TABLE ten_bang ENABLE CONSTRAINT ten_rang_buoc;
+		
+      *(Khi ENABLE lại, Oracle sẽ tự động quét qua toàn bộ bảng, nếu có bất kỳ 
+      dòng dữ liệu nào vi phạm ràng buộc trước đó, lệnh sẽ bị lỗi và khóa không được bật).*
+
+********************************************************************************
+>>> TỔNG KẾT GHI CHÚ ĐÚNG CHUẨN ĐI LÀM (NOTE)
+********************************************************************************
+- C1, C3, C4_1: Khai báo ngay khi tạo bảng (Thích hợp làm dự án mới từ đầu).
+- C2, C4_2: Khai báo sau bằng ALTER (Chuẩn mực khi viết script nâng cấp phiên bản, 
+            bảo trì hệ thống hoặc vá lỗi cơ sở dữ liệu đang chạy thực tế).
+- CHIẾN LƯỢC QUẢN TRỊ: Luôn luôn đặt tên CONSTRAINT (Theo cách C4). Việc kiểm soát 
+  tên khóa giúp ích rất nhiều cho Phúc trong việc đọc log lỗi Oracle (Biết ngay lỗi 
+  ở bảng nào, khóa nào) và chủ động trong việc DISABLE/ENABLE khóa khi xử lý data lớn.
+********************************************************************************

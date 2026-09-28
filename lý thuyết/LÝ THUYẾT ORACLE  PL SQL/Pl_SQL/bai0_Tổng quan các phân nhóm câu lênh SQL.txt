@@ -1,0 +1,23 @@
+==================================================
+TỔNG QUAN CÁC PHÂN NHÓM CÂU LỆNH SQL (SQL COMMANDS)
+==================================================
+
+1. DDL (Data Definition Language - Ngôn ngữ định nghĩa dữ liệu)
+   - Tác dụng: Thao tác với cấu trúc bảng, cơ sở dữ liệu (tạo, sửa, xóa cấu trúc).
+   - Các lệnh chính: CREATE, ALTER, DROP, TRUNCATE, RENAME.
+
+2. DML (Data Manipulation Language - Ngôn ngữ thao tác dữ liệu)
+   - Tác dụng: Thao tác trực tiếp trên dữ liệu bên trong các bảng.
+   - Các lệnh chính: INSERT, UPDATE, DELETE, MERGE.
+
+3. DQL (Data Query Language - Ngôn ngữ truy vấn dữ liệu)
+   - Tác dụng: Truy vấn và lấy dữ liệu ra để xem.
+   - Lệnh chính: SELECT (đôi khi được xếp chung vào DML).
+
+4. DCL (Data Control Language - Ngôn ngữ kiểm soát dữ liệu)
+   - Tác dụng: Quản lý quyền truy cập và bảo mật trên cơ sở dữ liệu.
+   - Các lệnh chính: GRANT (cấp quyền), REVOKE (thu hồi quyền).
+
+5. TCL (Transaction Control Language - Ngôn ngữ điều khiển giao dịch)
+   - Tác dụng: Quản lý các giao dịch (transaction) được thực hiện bởi DML.
+   - Các lệnh chính: COMMIT (lưu thay đổi), ROLLBACK (hủy thay đổi), SAVEPOINT.

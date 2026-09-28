@@ -1,0 +1,65 @@
+**********************************TÌM HIỂU KIẾN THỨC VỀ VIEW TRONG SQL****************************
+>>>>Khái niệm: View là mộ đói tượng SQL. View là một bảng ảo được tạo tư table dữ liệu có sẵn.
+( bản aor view có thể tham chiếu chứ hông hoàn toàn là bảng ảo chỉ tồn tại nhất thời)
+---> nói tóm lại view là bảng ảo ánh xạ các dữ liệu trong table đã tạo trc đó, có thể tham chiếu
+sữa đối , truy vấn dữ liệu một cách trực tiếp chứ hông chỉ là tạo bảng ảo đơn thuần
+
+**Note: + bảng ảo View không lưu dữ liệu mà lấy từ các bảng khác
+        + 1 view có thể chứa đến 1024 column
+        + view có thể lấy dữ liệu từ nhiều bảng
+
+=====> tóm lại ví dụ mún làm việc với dữ liệu của nhiều bảng (nhớ rằng càng nhiều
+dữ liệu tốc độ truy vấn càng chậm). thay vì phải joins các bảng rồi kèm đk sau having
+ ta nên tạo bảng ảo với view, khi đó với dữ liệu trích dẫn ra ta có thể 
+ dễ dàng truy vấn thêm sữa với dữ liệu  ít hơn và thời gian truy vấn nhanh hơn.
+
+
+>>>> Câu lệnh tạo VIEW:
+
+  create view tên_view
+  as
+     ... các lệnh truy vấn
+     (xem ví dụ thêm bên Sql_query/Aptech09_view.sql)
+
+
+
+
+     ++ ví dụ về View
+      vd co có nhiều bảng với tt ID, name... cần insert, update, delete. 
+      --> nhiều bảng sẽ truy vấn nặng và chậm
+      --> cách giải quyết tạo view để lk và hiển thị các dữ liệu trên thay vì joins tốn thời gian truy vấn
+      ---> vậy khi tiến hành insert, update, delete trên view dữ liệu có đc cập nhật và thay đổi không?
+      ===> câu tl là có và nó sẽ hông chỉ đc cập nhật , insert, delete như yêu cầu của mình mà nó còn
+      đc đưa nhưng câu lệnh mà ta thực hiện lên trên các bảng đó. ý là những thay đổi trên view chính làm
+      những thay đổi trên các table. nhưng view giúp ta lọc ra các dữ liệu cần để truy vấn nhẹ và linh hoạt hơn.
+
+
+
+      ===> xem các caau lệnh bên phần Sql_query/Aptech09_view
+   
+>>>>> Note:
+ --***NOTE: lưu ý View có những ràng buộc sau:
+ --+ không chứa truy vấn với TOP
+ --+ view không có Into
+ --+ Không đc trung tên với table dễ gây truy vấn nhầm
+ --+ không có giá trị DEFAULT
+ --+ không chứa quá 1024 column
+
+
+
+ >>>> WITH CHECK OPTION: Tạo ràng buộc với bnagr ảo view
+ ---> một số trường hợp khi tạo bảng ảo view có một số đk (vd: có slect, update những sp giá trên 50 chẳng hạn)
+ khi ta tiến hành update, insert những sp giá dưới 50 thì nó vi phạm đk  đã đặt ra trc đó. Tuy nhiên khi thực thi
+thì câu lệnh vẫn sẽ đc tiến hành có điều nó không hiển thị đc lên do khoogn thỏa đk ban đầu
+=====> để giải quyết vấn đề trên ta dùng câu lệnh ràng buộc [WITH CHECK OPTION] SAU create view để những đk đc thiết 
+lập trên bảng ảo sẽ có hiệu lực
+
+  () xem ví dụ bên phần bài tập: Sql_query/Aptech09_view
+
+
+
+>>>> NOTE: khi cập nhật thuộc tính ở pt table cha thì bảng ảo view dễ bị ảnh hưởng liên đới,
+do đó để ngăn chặn vfa bảo vệ bảng ả view trc tình huống xóa nhầm thuộc tính hiển thị
+trên view ở table gốc ta thêm with SCHEMABIDING.
+
+--> xem ví dụ bên phần bài tập: Sql_query/Aptech09_view

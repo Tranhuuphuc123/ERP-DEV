@@ -1,0 +1,90 @@
+================================================================================
+KHÁI QUÁT VỀ PL/SQL (ORACLE) VÀ SO SÁNH VỚI T-SQL (SQL SERVER / MYSQL)
+================================================================================
+
+I. KHÁI QUÁT VỀ PL/SQL (ORACLE)
+--------------------------------------------------------------------------------
+1. PL/SQL la gi?
+   - Viet tat cua: Procedural Language/Structured Query Language.
+   - La ngon ngu mo rong tinh thu tuc (Procedural) danh rieng cho Oracle Database.
+   - Ket hop suc manh truy van cua SQL voi cac cau truc lap trinh nhu vong lap, 
+     re nhanh va xu ly loi.
+
+2. Dac diem noi bat cua PL/SQL:
+   - Cau truc khoi (Block-structured): Code duoc to chuc thanh cac khoi logic 
+     gong DECLARE ... BEGIN ... EXCEPTION ... END;.
+   - Hieu nang cao: Nhieu cau lenh SQL duoc gom thanh mot khoi PL/SQL va gui 
+     den Oracle Server trong mot lan giao tiep, giam tai cho mang (Network Traffic).
+   - Tinh dong goi cao: Ho tro Package (gom Spec va Body) giup quan ly code, 
+     bao mat va tai su dung chuc nang cap doanh nghiep.
+   - Xu ly loi manh me: Co che Exception Handling giup bat va xu ly loi linh hoat.
+   - Luat va cu phap chat che: Dua tren phong cach ngon ngu Ada/Pascal, dam bao 
+     code it loi va de bao trì.
+
+
+II. KHÁI QUÁT VỀ T-SQL VÀ KHÁI NIỆM TƯƠNG ĐƯƠNG TRÊN SQL SERVER / MYSQL
+--------------------------------------------------------------------------------
+1. T-SQL (Transact-SQL) tren MS SQL Server:
+   - La ngon ngu mo rong thu tuc danh rieng cho Microsoft SQL Server.
+   - Cu phap linh hoat, cu an, lai giua SQL chuan va phong cach C/Sybase.
+   - Tap trung vao tinh nhanh gon va thao tac tap hop (Set-based processing).
+
+2. Khai niem tuong duong tren MySQL:
+   - MySQL khong goi la T-SQL hay PL/SQL, ma su dung "Stored Routines" 
+     (Procedure, Function, Trigger) theo chuan SQL/PSM.
+   - Tinh nang thu tuc cua MySQL don gian hon va it tinh nang nang cao hon Oracle.
+
+
+III. BẢNG SO SÁNH: PL/SQL (ORACLE) VỚI T-SQL (SQL SERVER / MYSQL)
+--------------------------------------------------------------------------------
+(Lay PL/SQL cua Oracle lam thuoc do chuan)
+
+TIEU CHI           PL/SQL (ORACLE) - CHUAN     T-SQL (MS SQL SERVER)       MYSQL (STORED ROUTINES)
+------------------ --------------------------- --------------------------- ---------------------------
+1. Triet ly thiet ke Chat che, cau truc khoi   Linh hoat, viet nhanh,      Don gian, co ban, du dung
+                   ruot (Ada/Pascal).          phong cach C/Sybase.        cho ung dung vua va nho.
+
+2. Cau truc khoi   Bat buoc: DECLARE - BEGIN   Khong bat buoc khoi         Dung BEGIN ... END
+                   - EXCEPTION - END.          DECLARE; dung BEGIN..END.   trong Procedure/Function.
+
+3. Khai bao bien   Dau khoi DECLARE hoac       Khai bao bat ky dau         Dau khoi BEGIN, 
+                   trong Package Header.       bang tu khóa DECLARE @name. bang tu khóa DECLARE name.
+
+4. Dong goi        Cuc manh voi PACKAGE        Khong co Package.           Khong co Package.
+   (Packaging)     (tach rieng Spec va Body).  Dung Schema de gom nhóm.    Dung Database de gom nhóm.
+
+5. Xu ly loi       Rất manh voi khoi           Dung TRY...CATCH            Dung DECLARE HANDLER
+                   EXCEPTION va User Errors.   tuong tu C#/Java.           co ban.
+
+6. Con tro (Cursor)Rất manh, cu phap tinh gón  Cú phap dai, tốn tai nguyen,Cu phap co ban,
+                   ho tro FOR rec IN (SELECT). khuyen khich dung Set-based.hieu nang trung binh.
+
+7. Kieu du lieu     Ho tro %TYPE, %ROWTYPE      Khong ho tro truc tiep      Khong ho tro
+   dong (Dynamic)  anh xa cot/bang dong.       kieu %TYPE/%ROWTYPE.        %TYPE/%ROWTYPE.
+
+8. Phan trang      Dung ROWNUM, OFFSET/FETCH,  Dung OFFSET/FETCH hoac      Dung LIMIT ... OFFSET.
+                   hoac Analytic Functions.    TOP/ROW_NUMBER().
+
+
+IV. ĐIỂM GIỐNG NHAU GIỮA PL/SQL VÀ T-SQL / MYSQL
+--------------------------------------------------------------------------------
+1. Muc tieu chung:
+   - Deu mo rong SQL chuan de thuc hien logic lap trinh phuc tap tren Server.
+   - Deu ho tro tao Stored Procedure, Function, Trigger va DML (SELECT, INSERT...).
+
+2. Khai niem can ban:
+   - Deu co bien, kieu du lieu, cau truc rẽ nhanh (IF...ELSE), vòng lap (WHILE/LOOP).
+   - Deu ho tro Con tro (Cursor) de duyet qua tung dong du lieu.
+   - Deu dam bao tinh toan ven giao dich (Transaction Management: COMMIT, ROLLBACK).
+
+
+V. TÓM TẮT DÀNH CHO NGUỜI HỌC ORACLE
+--------------------------------------------------------------------------------
+- PL/SQL cua Oracle la ngon ngu thu tuc chuan va toan dien nhat trong cac DBMS.
+- Khi da nam vung PL/SQL, ban se thay T-SQL (SQL Server) va MySQL rat de dung 
+  vi cu phap cua chung thong thoáng va it quy tac hon.
+- T-SQL va MySQL tap trung vao su nhanh gon, trong khi PL/SQL huong den kien truc 
+  he thong lon, tinh dong goi va do tin cay cao.
+================================================================================
+
+hoc toi 19:28

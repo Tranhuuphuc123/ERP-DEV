@@ -1,0 +1,35 @@
+- Đây là lọ trình thực tế để pass cv vào các công ty xuất nhập quản lý hàng 
+hóa trong các kho xí nghiệp với hệ thống ERP
+
+1/ GIAO DIÊN
+ -> 90% giao diện làm việc ở các công ty loại này là của 
+winform của C#, học và thiết kế giao diện với winform là 
+yếu tố then chốt hàng đầu
+ -> Tiếp đó là dùng web mvc ở môi trường này không quá chú 
+trọng vào web hiện đại tách bạch api và giao diện riêng ưu 
+tiên dễ và nhanh kiểu winform và web mvc
+
+2/ CƠ SỞ DỮ LIỆU
+ -> cơ sở dữ liệu ưu tiên hàng đầu là Oracle PL/SQL
+ + Học cách kết nối cơ sở dữ liệu này với winform 
+để thao tác CRUD, search.....
+  
+3/ WEB MVC .NET 
+ - phát triển web mvc tích hợp giao diện và code c# trong 
+một project
+ -> phần này chiếm 70-80% giao diện web văn phòng cho công ty
+
+4/ WEB API ASP.NET
+ -> xu thế mới la không để winform tương tác trực tiếp với 
+csdl mà phải thông qua BE giao tiếp với csdl gọi chung là 
+chuẩn restfull API
+ ==> đây là học cách tạo BE viết thao tác csdl và call api với 
+winform để tương tác 
+
+
+===============================DỰ ÁN===========================
+1/ NÊN TẠO WINFORM/WEB MVC LIÊN KẾT TRỰC TIẾP VỚI ORACLE DATABAE
+(80% HỆ THỐNG DOANH NGHIỆP ĐỀU LÀM VẬY)
+2/ NÂNG CAO LÊN KHÔNG TƯƠNG TÁC TRỨC TIẾP WINFORM/WEB MVC VỚI 
+ORACLE NỮA MÀ THÔNG QUA API VỚI ASP.NET WEB API(TÁCH BẠCH 
+API VÀ GIAO DIỆN RÕ RÀNG)

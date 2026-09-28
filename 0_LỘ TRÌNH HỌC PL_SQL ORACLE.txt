@@ -1,0 +1,107 @@
+LỘ TRÌNH CHI TIẾT HỌC ORACLE SQL & PL/SQL (FULL)
+=========================================================
+
+GIAI ĐOẠN 1: ORACLE SQL - QUẢN TRỊ VÀ TRUY VẤN DỮ LIỆU
+---------------------------------------------------------
+
+CHƯƠNG 1: CƠ BẢN VÀ LỌC DỮ LIỆU
+1.1. Cấu trúc Database Oracle: Schema, Table, Tablespace.
+1.2. Kiểu dữ liệu: VARCHAR2, NUMBER, DATE, TIMESTAMP, CLOB, BLOB.
+1.3. Lệnh SELECT cơ bản: DISTINCT, Alias (Bí danh).
+1.4. Lọc dữ liệu: WHERE với các toán tử AND, OR, IN, BETWEEN, LIKE, IS NULL.
+1.5. Sắp xếp: ORDER BY (ASC/DESC), sắp xếp theo nhiều cột.
+
+CHƯƠNG 2: HÀM CÓ SẴN (BUILT-IN FUNCTIONS)
+2.1. Hàm chuỗi: UPPER, LOWER, INITCAP, SUBSTR, INSTR, LENGTH, LPAD/RPAD, TRIM.
+2.2. Hàm số: ROUND, TRUNC, MOD, CEIL, FLOOR.
+2.3. Hàm ngày tháng: SYSDATE, CURRENT_DATE, ADD_MONTHS, LAST_DAY, MONTHS_BETWEEN, NEXT_DAY.
+2.4. Hàm chuyển đổi: TO_CHAR (định dạng số/ngày), TO_DATE, TO_NUMBER.
+2.5. Xử lý giá trị NULL: NVL, NVL2, NULLIF, COALESCE.
+2.6. Biểu thức điều kiện trong SQL: CASE WHEN ... THEN ... ELSE END, DECODE.
+
+CHƯƠNG 3: KẾT NỐI BẢNG (JOINS) & TẬP HỢP
+3.1. Phép nối: INNER JOIN, LEFT OUTER JOIN, RIGHT OUTER JOIN, FULL OUTER JOIN.
+3.2. Phép nối đặc biệt: Self Join (Tự nối), Cross Join (Tích Descartes).
+3.3. Toán tử tập hợp: UNION, UNION ALL, INTERSECT, MINUS.
+
+CHƯƠNG 4: NHÓM DỮ LIỆU & TRUY VẤN CON
+4.1. Hàm gộp: SUM, AVG, COUNT, MIN, MAX.
+4.2. Mệnh đề GROUP BY và lọc nhóm với HAVING.
+4.3. Subqueries: Truy vấn con trong WHERE, FROM và SELECT.
+4.4. Correlated Subqueries: Truy vấn con tương quan và toán tử EXISTS/NOT EXISTS.
+
+CHƯƠNG 5: THAO TÁC DỮ LIỆU (DML) & ĐỊNH NGHĨA (DDL)
+5.1. DML: INSERT, UPDATE, DELETE.
+5.2. Lệnh MERGE: Kết hợp Insert và Update trong một câu lệnh (Rất quan trọng).
+5.3. DDL: CREATE, ALTER, DROP, TRUNCATE table.
+5.4. Constraints: Primary Key, Foreign Key, Unique, Check, Not Null.
+
+CHƯƠNG 6: ĐỐI TƯỢNG NÂNG CAO VÀ HIỆU NĂNG
+6.1. Views: Tạo view, Inline view, Materialized View (Sơ lược).
+6.2. Sequences & Identity Columns: Tạo số tự động.
+6.3. Indexes: B-Tree Index, Bitmap Index, Function-based Index (Tối ưu truy vấn).
+6.4. Synonyms: Tạo tên thay thế cho đối tượng.
+6.5. Analytic Functions: ROW_NUMBER, RANK, DENSE_RANK, LEAD, LAG, FIRST_VALUE, LAST_VALUE.
+6.6. CTE (Common Table Expressions): Sử dụng mệnh đề WITH.
+6.7. Hierarchical Queries: Truy vấn phân cấp START WITH... CONNECT BY.
+
+
+GIAI ĐOẠN 2: LẬP TRÌNH PL/SQL (PROCEDURAL LANGUAGE)
+---------------------------------------------------------
+
+CHƯƠNG 7: CẤU TRÚC KHỐI & BIẾN
+7.1. Cấu trúc Block: DECLARE - BEGIN - EXCEPTION - END.
+7.2. Biến và Hằng số: Khai báo, gán giá trị.
+7.3. Thuộc tính kiểu: %TYPE (theo cột), %ROWTYPE (theo hàng).
+7.4. Bản ghi (Records): Định nghĩa kiểu Record tùy biến.
+
+CHƯƠNG 8: CẤU TRÚC ĐIỀU KHIỂN
+8.1. Rẽ nhánh: IF - THEN - ELSIF - ELSE, CASE statements.
+8.2. Vòng lặp:
+   - BASIC LOOP (vòng lặp cơ bản).
+   - WHILE LOOP.
+   - FOR LOOP (Numeric và Cursor For Loop).
+
+CHƯƠNG 9: CON TRỎ (CURSORS)
+9.1. Implicit Cursors: SQL%FOUND, SQL%NOTFOUND, SQL%ROWCOUNT.
+9.2. Explicit Cursors: DECLARE, OPEN, FETCH, CLOSE.
+9.3. Cursor với tham số.
+9.4. REF CURSOR: Con trỏ tham chiếu (Dùng để trả dữ liệu về Java/C#/.NET).
+
+CHƯƠNG 10: CHƯƠNG TRÌNH CON (STORED PROCEDURES & FUNCTIONS)
+10.1. Stored Procedures:
+   - Khái niệm và cách tạo: CREATE OR REPLACE PROCEDURE.
+   - Tham số: IN, OUT, IN OUT.
+   - Cách thực thi Procedure.
+10.2. Functions:
+   - Cách tạo: CREATE OR REPLACE FUNCTION.
+   - Lệnh RETURN và quy tắc sử dụng Function trong câu lệnh SQL.
+10.3. Sự khác biệt giữa Procedure và Function.
+
+CHƯƠNG 11: QUẢN LÝ GÓI (PACKAGES) - QUAN TRỌNG NHẤT KHI ĐI LÀM
+11.1. Package Specification: Khai báo các thành phần công khai.
+11.2. Package Body: Triển khai code chi tiết (Private/Public).
+11.3. Ưu điểm: Tính đóng gói, bảo mật, hiệu năng (Pre-compiled).
+
+CHƯƠNG 12: BẪY LỖI (EXCEPTION HANDLING)
+12.1. Predefined Exceptions: NO_DATA_FOUND, TOO_MANY_ROWS, OTHERS.
+12.2. User-defined Exceptions: Khai báo và RAISE lỗi theo ý muốn.
+12.3. RAISE_APPLICATION_ERROR: Trả về mã lỗi và thông điệp cho ứng dụng.
+
+CHƯƠNG 13: TRIGGER (TRÌNH KÍCH HOẠT)
+13.1. DML Triggers: BEFORE/AFTER trên INSERT, UPDATE, DELETE.
+13.2. Row Level (:OLD, :NEW) và Statement Level triggers.
+13.3. INSTEAD OF Triggers: Dùng cho View phức tạp.
+13.4. System/Database Event Triggers: Theo dõi Log-on, Log-off, DDL.
+
+CHƯƠNG 14: PL/SQL NÂNG CAO & TỐI ƯU HÓA
+14.1. Collections: Associative Arrays (Index-by tables), Nested Tables, Varrays.
+14.2. Bulk Collect & FORALL: Xử lý dữ liệu cực lớn (Tăng tốc gấp 10-100 lần).
+14.3. Dynamic SQL: EXECUTE IMMEDIATE (Viết code tạo code).
+14.4. Tối ưu hóa: EXPLAIN PLAN, gợi ý (HINTS), kiểm tra hiệu năng với DBMS_PROFILER.
+
+---------------------------------------------------------
+Lời khuyên thực hành:
+- Sử dụng Oracle SQL Developer thường xuyên.
+- Luôn kiểm tra kết quả sau mỗi câu lệnh DML bằng SELECT.
+- Tập viết Package thay vì các Procedure rời rạc để quản lý tốt hơn.

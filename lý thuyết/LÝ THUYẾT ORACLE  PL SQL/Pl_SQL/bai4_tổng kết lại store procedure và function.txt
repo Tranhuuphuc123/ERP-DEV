@@ -1,0 +1,76 @@
+====================================================================
+SO SÁNH CỐT LÕI VÀ HƯỚNG DẪN SỬ DỤNG: PROCEDURE VS FUNCTION
+====================================================================
+
+I. BẢNG SO SÁNH KHÁC BIỆT CỐT LÕI
+
++-------------------+-----------------------------------+-----------------------------------+
+| Tiêu chí          | Stored Procedure                  | Stored Function                   |
++-------------------+-----------------------------------+-----------------------------------+
+| Giá trị trả về    | Không bắt buộc trả về giá trị.    | BẮT BUỘC phải có câu lệnh RETURN  |
+|                   | Có thể trả về 0, 1 hoặc nhiều     | trả về 1 giá trị duy nhất (Scalar)|
+|                   | giá trị qua tham số OUT.          | hoặc 1 Bảng (Table).              |
++-------------------+-----------------------------------+-----------------------------------+
+| Cách gọi thực thi | Gọi độc lập qua lệnh EXEC,        | Gọi trực tiếp BÊN TRONG các câu   |
+|                   | EXECUTE, CALL hoặc nằm trong      | lệnh SQL (SELECT, WHERE, HAVING,  |
+|                   | khối lệnh (Block PL/SQL).         | JOIN...).                         |
++-------------------+-----------------------------------+-----------------------------------+
+| Thao tác DML      | Thỏa mái thực hiện các lệnh       | HẠN CHẾ. Nếu được gọi trong câu   |
+| (INSERT/UPDATE/   | INSERT, UPDATE, DELETE, COMMIT,   | SELECT, Function nghiêm cấm       |
+|  DELETE)          | ROLLBACK.                         | thay đổi dữ liệu (DML).           |
++-------------------+-----------------------------------+-----------------------------------+
+| Mục đích thiết kế | Đóng gói CHUỖI NGHIỆP VỤ / TÁC VỤ | Đóng gói PHÉP TÍNH TOÁN / XỬ LÝ   |
+|                   | phức tạp.                         | LOGIC để lấy kết quả.             |
++-------------------+-----------------------------------+-----------------------------------+
+
+====================================================================
+
+II. KHI NÀO DÙNG PROCEDURE? KHI NÀO DÙNG FUNCTION?
+
+	1. Khi nào nên dùng Stored Procedure?
+	Dùng Procedure khi bạn cần THỰC HIỆN MỘT HÀNH ĐỘNG / CHUỖI TÁC VỤ NGHIỆP VỤ:
+	- Thay đổi dữ liệu hệ thống: Cần thực hiện các thao tác INSERT, UPDATE, DELETE
+	  trên nhiều bảng cùng lúc (ví dụ: Tạo đơn hàng mới, cập nhật tồn kho, ghi log).
+	- Cần quản lý Giao dịch (Transaction): Cần kiểm soát COMMIT hoặc ROLLBACK 
+	  khi có lỗi xảy ra.
+	- Trả về nhiều giá trị hoặc Danh sách kết quả: Cần lấy ra một danh sách
+	  dữ liệu (Result Set/Cursor) cùng với nhiều biến đầu ra.
+	- Không cần nhúng vào câu SELECT: Tác vụ chạy độc lập khi được gọi từ Backend
+	  (C#, Java, Python, Node.js...).
+
+	* Ví dụ điển hình: Procedure sp_ThanhToanDonHang
+	  --> Thực hiện trừ tiền tài khoản, giảm số lượng kho, đổi trạng thái
+		  đơn hàng và ghi log giao dịch.
+
+	--------------------------------------------------------------------
+
+	2. Khi nào nên dùng Stored Function?
+	Dùng Function khi bạn cần TÍNH TOÁN VÀ TÁI SỬ DỤNG GIÁ TRỊ TRONG CÂU LỆNH SQL:
+	- Nhúng trực tiếp vào truy vấn SQL: Cần gọi hàm ngay trong các mệnh đề 
+	  SELECT, WHERE, ORDER BY.
+	- Tính toán trả về giá trị đơn (Scalar): Các phép tính lặp đi lặp lại 
+	  như tính thuế, tính doanh thu, tính tuổi, chuẩn hóa chuỗi tên.
+	- Chuyển đổi dữ liệu: Đóng gói logic biến đổi dữ liệu (ví dụ: Truyền vào 
+	  Mã trạng thái, trả về Tên trạng thái hiển thị).
+	- Không làm thay đổi dữ liệu: Chỉ đọc và tính toán, không can thiệp sửa đổi 
+	  bảng dữ liệu khi đang thực thi.
+
+	* Ví dụ điển hình: Function fn_TinhThueTNCN(luong)
+	  --> Nhận vào mức lương và trả về số tiền thuế.
+	  --> Cú pháp gọi trực tiếp: 
+		  SELECT employee_id, fn_TinhThueTNCN(salary) FROM employee;
+
+====================================================================
+
+III. QUY TẮC VÀNG ĐỂ CHỌN NHANH
+
+	Hỏi bản thân: 
+	"Tôi đang muốn LÀM MỘT HÀNH ĐỘNG hay muốn LẤY MỘT GIÁ TRỊ TÍNH TOÁN?"
+
+	1. Muốn LÀM MỘT HÀNH ĐỘNG (Sửa, xóa, thêm, xử lý quy trình)
+	   ==> CHỌN STORED PROCEDURE.
+
+	2. Muốn LẤY GIÁ TRỊ TÍNH TOÁN để SELECT hoặc lọc WHERE
+	   ==> CHỌN STORED FUNCTION.
+
+====================================================================

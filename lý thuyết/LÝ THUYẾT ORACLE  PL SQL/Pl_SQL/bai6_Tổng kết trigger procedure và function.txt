@@ -1,0 +1,176 @@
+================================================================================
+BÀI TỔNG KẾT: PHÂN BIỆT VÀ KHI NÀO DÙNG TRIGGER, PROCEDURE, FUNCTION
+(Hệ quản trị CSDL: Trọng tâm Oracle PL/SQL | SQL Server & MySQL)
+================================================================================
+
+I. TỔNG QUAN VỀ BA ĐỐI TƯỢNG (TRIGGER, PROCEDURE, FUNCTION)
+--------------------------------------------------------------------------------
+1. Trigger (Cò tự động):
+   - Là đoạn mã T-SQL / PL/SQL tự động thực thi (fire) khi xảy ra sự kiện CSDL (INSERT,
+   UPDATE, DELETE, DDL, Event).
+   - Không thể gọi trực tiếp từ ứng dụng hay câu lệnh SQL. Không có tham số đầu vào/đầu ra.
+
+2. Stored Procedure (Thủ tục lưu trữ):
+   - Là một tập hợp các câu lệnh SQL được biên dịch sẵn để thực hiện một chuỗi thao tác 
+   nghiệp vụ (Business Logic) phức tạp.
+   - Được gọi chủ động bằng lệnh CALL / EXEC. Hỗ trợ tham số đầu vào (IN), đầu ra (OUT, 
+   IN OUT) và trả về 0, 1 hoặc nhiều tập kết quả (Result Sets).
+
+3. Function (Hàm):
+   - Là đối tượng dùng để tính toán và BẮT BUỘC trả về MỘT giá trị duy nhất (hoặc một 
+   bảng/Collection).
+   - Có thể gọi trực tiếp bên trong các câu lệnh SQL (SELECT, WHERE, HAVING, JOIN...).
+
+--------------------------------------------------------------------------------
+
+
+II. BẢNG SO SÁNH CHI TIẾT (TRIGGER vs PROCEDURE vs FUNCTION)
+--------------------------------------------------------------------------------
+Tiêu chí           | Trigger                    | Stored Procedure           | Function
+-------------------|----------------------------|----------------------------|----------------------------
+1. Cách kích hoạt   | Tự động theo sự kiện CSDL  | Gọi chủ động (EXEC / CALL) | Gọi trong câu lệnh SQL / PL
+2. Giá trị trả về  | Không có                   | Không hoặc qua tham số OUT | BẮT BUỘC trả về 1 giá trị
+3. Tham số truyền  | KHÔNG hỗ trợ               | Hỗ trợ IN, OUT, IN OUT     | Hỗ trợ truyền tham số (IN)
+4. Sử dụng trong SQL| Không thể dùng trong SELECT| Không thể dùng trong SELECT| Dùng trực tiếp trong SELECT
+5. Quản lý Giao dịch| Hạn chế (Theo Transaction  | Cho phép COMMIT / ROLLBACK | KHÔNG cho phép COMMIT /
+   (Transaction)   | của câu lệnh kích hoạt)    | thoải mái                  | ROLLBACK bên trong hàm
+6. Mục đích chính  | Ràng buộc, Audit log tự động| Xử lý quy trình nghiệp vụ  | Tính toán dữ liệu, tái sử dụng
+--------------------------------------------------------------------------------
+
+
+III. KHI NÀO DÙNG ĐỐI TƯỢNG NÀO? (HƯỚNG DẪN CHỌN LỰA)
+--------------------------------------------------------------------------------
+
+	A. NGUYÊN TẮC CỐT LÕI ĐỂ ĐƯA RA QUYẾT ĐỊNH
+	--------------------------------------------------------------------------------
+
+		1. Dùng TRIGGER khi: "Sự kiện tự động & Bắt buộc ngầm"
+		   --------------------------------------------------
+		   - BẢN CHẤT: Bạn muốn một hành động diễn ra TỰ ĐỘNG (Automatic), BỊ ĐỘNG (Passive) 
+			 và BẮT BUỘC KHÔNG THỂ BỎ QUA (Enforced) ngay tại tầng Database.
+		   - DẤU HIỆU BÀI TOÁN:
+			 + "Tôi muốn HỆ THỐNG TỰ ĐỘNG làm X ngay khi DỮ LIỆU BỊ THAY ĐỔI (INSERT/UPDATE/DELETE)".
+			 + Ứng dụng/Người dùng không cần gọi chủ động, thậm chí không hề biết mã lệnh đó đang chạy.
+			 + Cần một "lớp bảo vệ cuối cùng" đảm bảo dữ liệu luôn đúng cho dù dữ liệu bị tác động từ Web,
+			   Mobile hay thao tác nhập tay trực tiếp trong CSDL.
+
+
+		2. Dùng STORED PROCEDURE khi: "Hành động chủ động & Quy trình nghiệp vụ"
+		   --------------------------------------------------------------------
+		   - BẢN CHẤT: Bạn muốn thực thi một CHUỖI HÀNH ĐỘNG (Action/Workflow) có sự CHỦ ĐỘNG GỌI 
+			 (Active Call) từ bên ngoài, có thể làm thay đổi trạng thái dữ liệu trên nhiều bảng 
+			 và kiểm soát giao dịch (Transaction).
+		   - DẤU HIỆU BÀI TOÁN:
+			 + "Tôi muốn THỰC HIỆN MỘT TÁC VỤ / QUY TRÌNH gồm nhiều bước (A -> B -> C)".
+			 + Cần gửi tham số vào và nhận lại trạng thái thành công/thất bại hoặc tập kết quả (Result Set).
+			 + Cần kiểm soát Transaction (Nếu bước 2 lỗi thì phải ROLLBACK toàn bộ, thành công thì COMMIT).
+			 + Đây là nơi đại diện cho luồng xử lý nghiệp vụ (Business Logic).
+
+
+		3. Dùng FUNCTION khi: "Tính toán & Trả về giá trị trong câu lệnh SQL"
+		   ------------------------------------------------------------------
+		   - BẢN CHẤT: Bạn muốn TÍNH TOÁN (Compute/Transform) từ đầu vào ra một giá trị duy nhất (hoặc bảng) 
+			 để NHÚNG THẲNG VÀO CÂU LỆNH SQL.
+		   - DẤU HIỆU BÀI TOÁN:
+			 + "Tôi có đầu vào X, tôi muốn nhận lại kết quả Y mà KHÔNG LÀM THAY ĐỔI DỮ LIỆU hệ thống"
+			   (Tính chất thuần túy / Read-only).
+			 + Bạn muốn sử dụng kết quả đó ngay trong các mệnh đề SQL như SELECT, WHERE, ORDER BY, HAVING.
+			 + Quy tắc vàng: Nếu tác vụ KHÔNG làm thay đổi dữ liệu và CẦN TÁI SỬ DỤNG trong lệnh SELECT,
+			   đó 100% là FUNCTION.
+
+	--------------------------------------------------------------------------------
+
+
+	B. BẢNG TÓM TẮT TƯ DUY LỰA CHỌN NHANH
+	--------------------------------------------------------------------------------
+	Đối tượng | Tư duy bản chất      | Câu hỏi tự đặt ra để quyết định
+	----------|----------------------|------------------------------------------------------
+	TRIGGER   | Bị động & Tự động    | "Có phải tác vụ này cần TỰ ĐỘNG CHẠY NGẦM ngay khi 
+			  |                      |  có ai đó INSERT/UPDATE/DELETE không?"
+	----------|----------------------|------------------------------------------------------
+	PROCEDURE | Thực thi quy trình   | "Có phải đây là MỘT LỆNH/QUY TRÌNH CẦN GỌI CHỦ ĐỘNG 
+			  |                      |  để xử lý logic, ghi/sửa dữ liệu và quản lý Transaction không?"
+	----------|----------------------|------------------------------------------------------
+	FUNCTION  | Tính toán & Trả về   | "Có phải tôi chỉ cần TRUYỀN VÀO VÀ LẤY RA MỘT GIÁ TRỊ 
+			  |                      |  để nhúng vào câu lệnh SELECT/WHERE không?"
+	--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+
+IV. CÚ PHÁP VÀ VÍ DỤ MINH HỌA TRÊN ORACLE PL/SQL
+--------------------------------------------------------------------------------
+1. Ví dụ Trigger (Tự động ghi Log khi thay đổi lương):
+   ------------------------------------------------------------
+   CREATE OR REPLACE TRIGGER trg_log_salary
+   AFTER UPDATE OF salary ON employees
+   FOR EACH ROW
+   BEGIN
+       INSERT INTO salary_log(emp_id, old_sal, new_sal, log_date)
+       VALUES (:OLD.employee_id, :OLD.salary, :NEW.salary, SYSDATE);
+   END;
+   /
+
+2. Ví dụ Stored Procedure (Xử lý tăng lương cho phòng ban và kiểm tra Transaction):
+   -----------------------------------------------------------------------------
+   CREATE OR REPLACE PROCEDURE sp_raise_dept_salary (
+       p_dept_id IN NUMBER,
+       p_percent IN NUMBER
+   ) AS
+   BEGIN
+       UPDATE employees
+       SET salary = salary + (salary * p_percent / 100)
+       WHERE department_id = p_dept_id;
+       
+       COMMIT;
+   END;
+   /
+   -- Gọi thủ tục:
+   -- EXEC sp_raise_dept_salary(50, 10);
+
+3. Ví dụ Function (Hàm tính thuế thu nhập cá nhân):
+   -----------------------------------------------------------------------------
+   CREATE OR REPLACE FUNCTION fn_calculate_tax (
+       p_salary IN NUMBER
+   ) RETURN NUMBER IS
+       v_tax NUMBER := 0;
+   BEGIN
+       IF p_salary > 10000 THEN
+           v_tax := p_salary * 0.10;
+       ELSE
+           v_tax := p_salary * 0.05;
+       END IF;
+       RETURN v_tax;
+   END;
+   /
+   -- Gọi hàm trong câu lệnh SELECT:
+   -- SELECT employee_id, salary, fn_calculate_tax(salary) AS tax_amount FROM employees;
+
+--------------------------------------------------------------------------------
+
+
+V. CÚ PHÁP TÓM TẮT TRÊN SQL SERVER VÀ MYSQL
+--------------------------------------------------------------------------------
+1. SQL Server:
+   - Procedure: CREATE PROCEDURE sp_Name @Param INT AS BEGIN ... END
+   - Function : CREATE FUNCTION fn_Name(@Param INT) RETURNS INT AS BEGIN ... RETURN @Val END
+   - Trigger  : CREATE TRIGGER trg_Name ON Table AFTER INSERT AS BEGIN SELECT * FROM inserted END
+
+2. MySQL:
+   - Procedure: DELIMITER // CREATE PROCEDURE sp_Name(IN p_id INT) BEGIN ... END // DELIMITER ;
+   - Function : DELIMITER // 
+					CREATE FUNCTION fn_Name(p_val INT) 
+					RETURNS INT DETERMINISTIC 
+					BEGIN ... 
+					RETURN p_val; 
+					END 
+				// DELIMITER ;
+				
+   - Trigger  : DELIMITER // 
+					CREATE TRIGGER trg_Name 
+					AFTER INSERT ON Table 
+					FOR EACH ROW 
+					BEGIN ... 
+					END 
+				// DELIMITER ;
+--------------------------------------------------------------------------------

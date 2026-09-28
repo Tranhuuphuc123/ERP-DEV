@@ -1,0 +1,166 @@
+================================================================================
+QUẢN LÝ ĐỐI TƯỢNG BẢNG (TABLE) TRONG ORACLE DATABASE
+================================================================================
+ => DDL:(Data Definition Language) - Ngôn ngữ định nghĩa dữ liệu
+ # Định nghĩa: DDL là nhóm các câu lệnh dùng để định nghĩa, thay đổi hoặc xóa 
+ bỏ cấu trúc của các đối tượng trong cơ sở dữ liệu (như bảng - table, thực thể 
+ - view, chỉ mục - index, v.v.). Các lệnh này tác động trực tiếp lên "khung xương" 
+ của database chứ không can thiệp vào từng dòng dữ liệu cụ thể.
+
+ # Các lệnh DDL phổ biến:
+	+ CREATE: Tạo mới một đối tượng (Ví dụ: CREATE TABLE USERS...).
+	+ ALTER: Chỉnh sửa cấu trúc đã có (Ví dụ: Thêm cột, sửa kiểu dữ liệu, thêm
+	khóa chính ADD CONSTRAINT).
+
+	+ DROP: Xóa sổ hoàn toàn một đối tượng khỏi hệ thống (Ví dụ: DROP TABLE USERS;).
+	+ TRUNCATE: Xóa sạch sành sanh toàn bộ dữ liệu bên trong bảng nhưng giữ lại cái
+	khung bảng (Lệnh này chạy siêu nhanh).
+	
+ # Đặc điểm chí mạng của DDL trong Oracle:
+	+ TỰ ĐỘNG COMMIT (Implicit Commit): Như tôi đã giải thích ở câu trước, các lệnh DDL một
+	khi đã bấm chạy thành công là hệ thống tự động chốt lưu vĩnh viễn vào ổ cứng. Nên không 
+	cần gõ thêm lệnh COMMIT
+
+	+ KHÔNG THỂ ROLLBACK: Bạn không thể dùng lệnh ROLLBACK để "quay xe" cứu vãn một cái bảng 
+	vừa bị DROP hoặc ALTER nhầm.	
+ 
+ 
+
+
+
+1. TẠO BẢNG (CREATE TABLE)
+--------------------------------------------------------------------------------
+* Cú pháp cơ bản:
+    CREATE TABLE ten_bang (
+        ten_cot_1 kieu_du_lieu [rang_buoc],
+        ten_cot_2 kieu_du_lieu [rang_buoc],
+        ...
+        CONSTRAINT pk_ten_bang PRIMARY KEY (ten_cot_1)
+    );
+
+* GIÁ TRỊ TỰ TĂNG 
+   - GENERATED ALWAYS AS IDENTITY
+
+* Các kiểu dữ liệu phổ biến trong Oracle:
+    - VARCHAR2(n): Chuỗi ký tự độ dài thay đổi (thường dùng nhất).
+    - NVARCHAR2(n): Chuỗi ký tự Unicode (hỗ trợ tiếng Việt tốt hơn).
+    - NUMBER(p,s): Số nguyên hoặc số thập phân.
+    - DATE: Lưu trữ ngày tháng năm và giờ giấc.
+    - CLOB: Lưu trữ văn bản cực lớn.
+
+* Ví dụ (Tạo bảng sinh_vien):
+    CREATE TABLE sinh_vien (
+        sv_id NUMBER GENERATED ALWAYS AS IDENTITY,
+        ho_ten NVARCHAR2(100) NOT NULL,
+        ngay_sinh DATE,
+        email VARCHAR2(100) UNIQUE,
+        CONSTRAINT pk_sinh_vien PRIMARY KEY (sv_id)
+    );
+    -- Dấu chấm phẩy ';' kết thúc lệnh trong SQL Developer.
+    -- LƯU Ý: + Nên đặt constraint cho khóa chính để dễ quản lý
+			  + Riêng đối với câu lệnh CREATE TABLE (và các lệnh chỉnh sửa cấu 
+			  trúc bảng như ALTER, DROP), bạn KHÔNG CẦN gõ lệnh COMMIT. Lý do 
+			  cực kỳ đơn giản: Oracle có cơ chế Auto-Commit (Commit tự động) 
+			  đối với nhóm lệnh này.
+
+2. THAY ĐỔI CẤU TRÚC BẢNG (ALTER TABLE)
+--------------------------------------------------------------------------------
+Dùng để chỉnh sửa "khung" của bảng sau khi đã tạo.
+
+* THÊM CỘT MỚI:
+    ALTER TABLE ten_bang ADD (ten_cot kieu_du_lieu);
+    -- Ví dụ:
+    ALTER TABLE sinh_vien ADD (dia_chi NVARCHAR2(255));
+
+* SỬA KIỂU DỮ LIỆU HOẶC RÀNG BUỘC CỘT:
+    ALTER TABLE ten_bang MODIFY (ten_cot kieu_du_lieu_moi);
+    -- Ví dụ (tăng độ dài cột ho_ten):
+    ALTER TABLE sinh_vien MODIFY (ho_ten NVARCHAR2(200));
+
+* XÓA CỘT TRONG BẢNG:
+    ALTER TABLE ten_bang DROP COLUMN ten_cot;
+    -- Ví dụ:
+    ALTER TABLE sinh_vien DROP COLUMN ngay_sinh;
+
+* ĐỔI TÊN CỘT:
+    ALTER TABLE ten_bang RENAME COLUMN ten_cu TO ten_moi;
+
+* ĐỔI TÊN TABLE CŨ SANG TÊN MỚI
+    ALTER TABLE ten_bang_cu RENAME TO ten_bang_moi;
+		
+		OR 
+		
+    RENAME Ten_Bang_Cu TO Ten_Bang_Moi;	
+	
+    -- ví dụ:
+    ALTER TABLE Users RENAME TO Nguoidung;
+	
+		OR
+		
+	RENAME Users TO Nguoidung;	
+	
+	
+
+3. XÓA BẢNG VÀ DỮ LIỆU (DROP, TRUNCATE, DELETE)
+--------------------------------------------------------------------------------
+* XÓA TOÀN BỘ BẢNG (Bay sạch cả khung và dữ liệu):
+    DROP TABLE ten_bang;
+    -- Lưu ý: Trong Oracle, bảng bị xóa thường vào "Recycle Bin".
+    -- Muốn xóa vĩnh viễn: DROP TABLE ten_bang PURGE;
+
+* XÓA SẠCH DỮ LIỆU TRONG BẢNG (Giữ lại khung/cấu trúc):
+    TRUNCATE TABLE ten_bang;
+    -- Rất nhanh, không thể ROLLBACK (hồi phục), giải phóng bộ nhớ.
+
+* XÓA DỮ LIỆU CÓ ĐIỀU KIỆN:
+    DELETE FROM ten_bang WHERE dieu_kien;
+    -- Ví dụ: DELETE FROM sinh_vien WHERE sv_id = 10;
+    -- Sau khi DELETE phải dùng lệnh COMMIT; để xác nhận thay đổi.
+
+4. XEM THÔNG TIN BẢNG
+--------------------------------------------------------------------------------
+* Xem dữ liệu trong bảng:
+    SELECT * FROM ten_bang;
+
+* Xem cấu trúc bảng (Các cột, kiểu dữ liệu) trong SQL Developer:
+    
+			DESCRIBE ten_bang;
+			
+					OR
+					
+			DES ten_bang;
+			
+					OR
+    
+	        Hoặc dùng phím tắt: Click vào tên bảng và nhấn [Shift + F4].
+			
+			
+
+5. GHI CHÚ QUAN TRỌNG CHO ORACLE
+--------------------------------------------------------------------------------
+- Oracle tự động chuyển tên bảng/cột thành VIẾT HOA trong từ điển hệ thống.
+- Nên dùng VARCHAR2 và NVARCHAR2 thay vì VARCHAR (VARCHAR là kiểu cũ).
+- Lệnh COMMIT: Rất quan trọng! Sau khi INSERT, UPDATE, DELETE, dữ liệu chỉ 
+  thực sự lưu xuống ổ cứng khi bạn chạy lệnh COMMIT hoặc bấm nút Commit 
+  trên thanh công cụ.
+- Identity (Tự tăng): Chỉ có từ bản Oracle 12c trở lên. Các bản cũ hơn 
+  phải dùng SEQUENCE và TRIGGER.
+
+--------------------------------------------------------------------------------
+MÃ MINH HỌA TỔNG HỢP (ORACLE SQL):
+--------------------------------------------------------------------------------
+-- 1. Tạo bảng sách
+CREATE TABLE sach (
+    ma_sach NUMBER PRIMARY KEY,
+    ten_sach NVARCHAR2(200)
+);
+
+-- 2. Thêm cột tác giả
+ALTER TABLE sach ADD (tac_gia NVARCHAR2(100));
+
+-- 3. Xóa dữ liệu sạch bóng (giữ lại khung)
+TRUNCATE TABLE sach;
+
+-- 4. Xóa vĩnh viễn bảng khỏi hệ thống
+DROP TABLE sach PURGE;
+================================================================================

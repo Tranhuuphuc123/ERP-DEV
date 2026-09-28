@@ -1,0 +1,170 @@
+=====================================================================
+ TỔNG QUAN HỆ SINH THÁI QUẢN TRỊ DATABASE TRONG ORACLE SQL DEVELOPER
+=====================================================================
+ - Như đã nói rõ ở bai00 khi mà cài bản ORACLE express, standar, enterprise chuẩn 
+ hệ csdl mẫu HR, OE, PM... có sẳn(hệ csdl mẫu kiểu northwind.mdf bên sql server á)
+ thì ta chỉ cần làm theo cách bai00 mở cmd kích hoạt và tiến hành tạo connection hr.. 
+ là xong(xấu hơn thì làm bỏ script github vào nếu không có sẵn lib csdl mẫu)
+ 
+ <=> tuy nhiên nếu hệ csdl mẫu hr, oe, pm... các version về sao nhất là sài Oracle XE 
+ mà không có sẵn thì nên tạo mới schema user mới hoàn toàn rồi tự viết script hay là 
+ lấy scrpt .sql mẫu từ github vào mà tự run script rồi sài vẫn hay hơn và ưu tiên hơn 
+ 
+ 
+ ===> sau đây là cách hướng dẫn cho việc tạo hệ sinh thái mới SCHEMA USER mới hoàn toàn 
+ 
+ 
+--------------------------------------------------------------
+PHẦN I: CẤU TRÚC VÀ HỆ SINH THÁI ORACLE (CÁCH TỔ CHỨC DỮ LIỆU)
+ - Để hiểu Oracle, hãy tưởng tượng nó là một tòa chung cư khổng lồ thay vì 
+một dãy nhà cấp bốn (MySQL).
+
+0. DATABASE: 
+   - Là toàn bộ thực thể (instance) lớn nhất.
+
+1. Tablespace (Kho lưu trữ vật lý):
+   - Đây là "Miếng đất" hoặc "Căn phòng vật lý" trên ổ cứng của bạn. Nó là nới lưu 
+   trữ những values giá trị thực cho dữ liệu của bạn(~ MySQL, SQLServer thì file .sql 
+   chỉ là script còn file .mdf.. mới là nơi lưu trữ các dữ liệu thật sự đc thêm vào)
+   - Nó chứa dữ liệu thực sự (file .DBF). 
+   - Một Database có nhiều Tablespace (SYSTEM, USERS, TEMP...).
+   - Bạn không cần quá lo lắng về nó lúc mới học, Oracle sẽ tự cấp đất cho User.
+
+2. Schema & User (Không gian logic - Quan trọng nhất):
+   # Ở MySQL/SQL SERVER, bạn dùng DATABASE để phân chia dự án.
+   # Ở Oracle, bạn dùng SCHEMA để phân chia.
+    + SCHEMA = USER. Khi bạn tạo một User tên là "PHUC", Oracle tạo ra một cái 
+    Schema tên là "PHUC". Lưu ý thêm là User này nó chính là phần username khi 
+    điền lúc tạo new connection trong Oracle
+    + Schema giống như "Căn hộ" riêng của bạn trong tòa nhà. Mọi thứ bạn tạo 
+    (Bảng, View) đều nằm trong căn hộ này. 
+
+3. Table (Bảng dữ liệu):
+   - Nằm bên trong Schema. 
+   - Cấu trúc: [Tên_Instance] -> [Schema/User] -> [Table].
+
+==> Khái niệm CONNECTION là khái niệm chỉ Oracle SQL Developer kết nối vào một 
+schema cụ thể
+
+---------------------------------------------------------
+PHẦN II:SO SÁNH DATABASE TRONG HAI HỆ SINH THÁI
+
+ 1/ MySQL/SQLServer: [Server] -> [Database A] -> [Table 1, 2]
+                     	      -> [Database B] -> [Table 3, 4]
+                              (Chỉ cần "CREATE DATABASE" và "USE" là xong)
+
+ 2/ Oracle: [Instance/Database Gốc] 
+           |
+           |--> [Schema SYSTEM] (Chủ nhà - Chứa bảng hệ thống AQ$, LOGMNR$)
+           |--> [Schema PHUC]   (Người thuê - Chứa bảng dự án của bạn)
+           |--> [Schema HR]     (Dữ liệu mẫu mẫu)
+
+ => VẤN ĐỀ CỦA BẠN: Khi bạn mở SQL Developer lần đầu khi mới tạo new connection mới, 
+ nó vào thẳng "Căn hộ của chủ nhà" (SYSTEM,. thường username điền là system luôn á, 
+ trong schema system nó có sẵn table, views... dấn đến muốn tạo thêm table cá nhân
+ sẽ bị chồng lấn lên gây rối và nhiều table... không cần). Đó là lý do bạn thấy hàng 
+ trăm bảng hệ thống và bị rối và cần tự tạo schema (user) cá nhân mảnh đất giành riêng
+ cho mình.
+
+
+
+---------------------------------------------------------
+PHẦN III: QUY TRÌNH "RA Ở RIÊNG" (THAO TÁC THỰC TẾ)
+ - Để có một không gian sạch sẽ (Database riêng), bạn phải thực hiện quy trình 
+ "Khai sinh - Cấp đất":
+ 
+ ## BƯỚC 1: Đăng nhập vào SYSTEM (Cổng chính của tòa nhà)
+  - nghĩa là vào cái user system(hoặc mở file script worksheet của system or tự mở file 
+  .sql lên.. rồi chọn select là hệ user system đã tạo ở ban đầu tiền khi sử dụng oracle á)
+  - Phải vào đây vì chỉ chủ nhà(System) mới có quyền tạo người dùng mới.
+
+ ## BƯỚC 2:  Tạo Tablespace (vùng không gian lưu trữ)
+
+	CREATE TABLESPACE TS_QUANLY
+	DATAFILE 'C:\Oracle\Data\quanly_data.dbf' 
+	SIZE 100M 
+	AUTOEXTEND ON NEXT 10M;
+
+ ## BƯỚC 3: Chạy bộ lệnh "Khai sinh"
+ (Viết script sau và bôi đen và nhấn F5 trong Worksheet của SYSTEM)
+
+    -- a. Cho phép tạo user kiểu đơn giản (local user)
+
+    ALTER SESSION SET "_ORACLE_SCRIPT" = true;
+
+    -- b. Tạo User (Khai sinh Schema mới)
+    -- Mật khẩu có ký tự đặc biệt như @, #, $ PHẢI để trong dấu ""
+    -- trong đó: + DEFAULT TABLESPACE <TÊN TABLESPACE> Chỉ định vùng lưu trữ dữ liệu mặc 
+		 định cho User. Nếu không có chỉ định nó sẽ ném values thật vào tablespace 
+   		 mặc định là system..
+		 + QUOTA UNLIMITED ON TS_QUANLY: Cấp quyền sử dụng dung lượng không giới 
+		 hạn trên vùng lưu trữ đó. Quota chính là mức dung lượng, Unlimited là không 
+      		 giới hạn
+
+
+    	CREATE USER PHUC_LEARNING 
+    	IDENTIFIED BY "Huuphuc1995ct#"
+		DEFAULT TABLESPACE TS_QUANLY
+		QUOTA UNLIMITED ON TS_QUANLY;
+
+    -- c. Cấp quyền (Cấp chìa khóa và diện tích sử dụng)
+    -- CONNECT: Quyền đi vào cửa.
+    -- RESOURCE: Quyền xây bảng, thêm dữ liệu.
+    -- UNLIMITED TABLESPACE: Quyền dùng đất (không gian lưu trữ).
+
+    GRANT CONNECT, RESOURCE, UNLIMITED TABLESPACE TO PHUC_LEARNING;
+
+ ## BƯỚC 4: THIẾT LẬP KẾT NỐI TRÊN ORACLE SQL DEVELOPER (GUI)
+   - Mở Oracle SQL Developer.
+   - Tại cửa sổ "Connections", chuột phải chọn "New Connection" (hoặc bấm dấu +).
+   - Điền thông tin:
+   	+ Name: Ten_Ket_Noi (Tùy chọn, ví dụ: Connection_Phuc)
+   	+ Username: User_Phuc (Tên user vừa tạo ở trên)
+   	+ Password: 123456
+   	+ Hostname: localhost (hoặc IP server)
+   	+ Port: 1521 (Mặc định)
+   	+ SID hoặc Service Name: Thường là 'xe' (bản Express) hoặc 'orcl'.
+   - Bấm "Test" để kiểm tra, nếu báo "Success" thì chọn "Connect".
+   
+---------------------------------------------------------
+TỔNG KẾT LUỒNG TƯ DUY:
+1. Oracle chỉ có 1 Database gốc duy nhất trên máy bạn. Chính là system
+nhưng system thường có hệ thống table, view, procedure mấu, dẫn đến nhiều
+khi tạo table của mình nó ẩn lộn xộn trong đống có sẵn đó
+
+2. Muốn có "Database riêng" để học? để tránh việc có sẵn table của system
+ => Tạo USER mới.
+
+3. Muốn tạo User? => Phải dùng SYSTEM để ra lệnh(thực hiện 3 bước viết scripts 
+cấp quyền tạo user mới ở phần III ).
+
+4. Muốn làm việc sạch sẽ? => Tạo CONNECTION mới bằng User vừa tạo.
+
+LƯU Ý: Lệnh "USE" không tồn tại. Muốn đổi sử dụng database, hãy chọn Connection 
+tương ứng ở cột bên trái hoặc ô góc phải Worksheet.
+=========================================================
+
+
+--------------------------------------------------------------------------------
+PHẦN 4. QUẢN LÝ DATABASE: ĐỔI TÊN & XÓA (DATABASE/USER/TABLESPACE)
+ - Trong Oracle, việc "Xóa/Đổi tên Database" được hiểu theo các cấp độ sau:
+
+* ĐỔI TÊN DATABASE (GLOBAL NAME):
+    ALTER DATABASE RENAME GLOBAL_NAME TO Ten_Moi.Ten_Mien;
+
+* QUẢN LÝ USER/SCHEMA (Cách phổ biến nhất):
+    -- Đổi mật khẩu User:
+    ALTER USER User_Phuc IDENTIFIED BY MatKhauMoi;
+    -- Khóa/Mở khóa User:
+    ALTER USER User_Phuc ACCOUNT LOCK;   -- Khóa
+    ALTER USER User_Phuc ACCOUNT UNLOCK; -- Mở
+    -- XÓA USER (Xóa toàn bộ Database logic):
+    DROP USER User_Phuc CASCADE; 
+    -- (Lưu ý: CASCADE sẽ xóa tất cả bảng, dữ liệu bên trong User đó).
+
+* QUẢN LÝ TABLESPACE (QUẢN LÝ FILE VẬT LÝ):
+    -- Đổi tên Tablespace:
+    ALTER TABLESPACE TS_DUAN RENAME TO TS_DUAN_MOI;
+    -- XÓA TABLESPACE:
+    DROP TABLESPACE TS_DUAN_MOI INCLUDING CONTENTS AND DATAFILES;
+    -- (Lưu ý: Lệnh này xóa cả dữ liệu logic lẫn file .dbf trên ổ cứng).

@@ -1,0 +1,257 @@
+**********************HỆ CƠ SỞ DỮ LIỆU MẪU CÓ SẴN TRONG ORACLE KIỂU NORTHWIND*******************************
+
+========================================================================
+             HỆ SINH THÁI CƠ SỞ DỮ LIỆU MẪU TRONG ORACLE DATABASE         
+        (So Sánh Với Northwind Của SQL Server & Hướng Dẫn Sử Dụng)
+========================================================================
+
+------------------------------------------------------------------------
+I. TỔNG QUAN VÀ SO SÁNH: ORACLE SAMPLE SCHEMAS VS. NORTHWIND
+------------------------------------------------------------------------
+* Triết lý thiết kế: File data mẫu dùng cho học tập
+  - Microsoft SQL Server (Northwind/AdventureWorks): Gom tất cả các bảng 
+    (Khách hàng, Nhân viên, Đơn hàng...) vào chung MỘT Database duy nhất.
+  - Oracle Database: Sử dụng khái niệm "Schema" (mỗi Schema tương ứng với 
+    một User riêng biệt đại diện cho một phòng ban). Các Schema này liên 
+    kết với nhau tạo thành một hệ sinh thái doanh nghiệp giả lập hoàn chỉnh.
+
+* Các Schema mẫu chính trong hệ sinh thái Oracle: các Schema này có sẵn khi tải và 
+cài đặt Oracle sql developer
+  - HR (Human Resources): Quản lý nhân sự (Nhân viên, phòng ban, lương). 
+    Đây là CSDL mẫu kinh điển nhất, được dùng xuyên suốt trong cuốn sách 
+    "Oracle PL/SQL Programming" (Steven Feuerstein) bạn đang đọc.
+  - OE (Order Entry): Quản lý kho và đơn hàng (Khách hàng, sản phẩm).
+  - PM (Product Media): Quản lý dữ liệu đa phương tiện của sản phẩm.
+  - IX (Information Exchange): Quản lý vận chuyển và chuỗi cung ứng.
+  - SH (Sales History): Dữ liệu lịch sử bán hàng lớn (Chuyên học Data Warehouse).
+
+* Bảng đối chiếu tương đương (Để bạn dễ hình dung từ bên SQL Server):
+  + Nếu bên Northwind bạn hay dùng bảng [Employees] -> Bên Oracle dùng HR.EMPLOYEES
+  + Nếu bên Northwind bạn hay dùng bảng [Customers] -> Bên Oracle dùng OE.CUSTOMERS
+  + Nếu bên Northwind bạn hay dùng bảng [Orders]    -> Bên Oracle dùng OE.ORDERS
+  + Nếu bên Northwind bạn hay dùng bảng [Products]  -> Bên Oracle dùng OE.PRODUCT_INFORMATION
+
+------------------------------------------------------------------------
+II. CÁCH KÍCH HOẠT VÀ SỬ DỤNG CÁC CSDL MẪU CÓ SẴN (MỞ KHÓA TÀI KHOẢN)
+------------------------------------------------------------------------
+- Thông thường khi cài đặt Oracle (Bản Enterprise, Standard hoặc Express), 
+các CSDL mẫu này đã được tạo sẵn nhưng ở trạng thái khóa (Locked) để bảo mật. 
+Bạn không cần tải file `.mdf` nào cả, chỉ cần mở khóa tài khoản theo các bước:
+
+<=> tuy nhien lưu ý với bản Oracle XE thì thường các version mới 19 21c... 
+sẽ không còn ccs CSDL mẫu này đc tích hợp sẵn nữa
+
+==> điều đó dẫn đến cách thức này có thể không cần thiết mà nên ưu tiến tạo 
+mới hoàn toàn hệ schema, tablespace mới rồi chép script vào run script là xong 
+(muốn coi tham khảo nd đó thì xem baif_Cấu trúc  SCHEMA TABLESPACE..)
+
+==> CÒN LƯU Ý: 
+ Ở BÀI NÀY HƯỚNG DẪN CHẠY CMD - SQL... ĐỂ BÂT/TẮT HỆ SINH THÁI CSDL MẪU HR, OE, PM ..
+ LÀ VÌ KKHI CÀI BẢN CHUẨN ORACLE ENTERPRISE, STANDAR HAY EXPRESS THƯỜNG HỆ CSDL MẪU 
+ CÓ SẴN TÍCH HỢP RỒI LÀM CÁCH NÀY ĐỂ KÍCH HOẠT NÓ THUI KHỎI PHẢI LÀM THỦ CÔNG..
+
+		------------------------------------------------------------------------
+		ĐỀ MỤC 1: GIAI ĐOẠN 1 - THỰC HIỆN TRÊN CMD (CỬA SỔ DÒNG LỆNH WINDOWS)
+		------------------------------------------------------------------------
+		* Giải thích lý do: Bạn KHÔNG THỂ dùng một file .sql hay công cụ giao diện 
+		  để mở khóa HR khi chưa có tài khoản Admin kết nối thành công. Vì vậy, ta 
+		  phải mượn quyền Admin tối cao của hệ điều hành thông qua CMD để ép Oracle 
+		  mở cửa.
+
+		* Các bước thực hiện chi tiết:
+		  Bước 1.1: Bấm phím Windows, gõ "cmd" và nhấn Enter để mở Terminal.
+		  
+		  Bước 1.2: Gõ lệnh sau để đăng nhập thẳng vào Oracle bằng quyền SYSDBA 
+					(Admin tối cao, Nhập mật khẩu Admin bạn đã thiết lập lúc cài đặt Oracle.
+					=> lưu ý: khi đặt pass mà có chữ ký tự đặt biệt @,#.. thì nhớ nhập pass 
+					trên cmd nên nhập pass thiết lặp đó vào dấu "" để tránh lỗi hệ thống 
+					=> vd: "Huuphuc1995ct@"):
+					
+					
+					sqlplus sys as sysdba
+					
+					
+		  Bước 1.3: (QUAN TRỌNG CHO ORACLE 12C TRỞ LÊN) 
+					Mặc định, các database đời mới dùng kiến trúc Container. Các DB mẫu 
+					như HR nằm ở một vùng chứa phụ gọi là Pluggable Database (PDB). 
+					Bạn cần chuyển quyền vào vùng chứa này bằng lệnh:
+					
+					
+					ALTER SESSION SET CONTAINER = XEPDB1;
+					
+					
+					(Lưu ý: "XEPDB1" là tên mặc định khi cài Oracle XE. Nếu lúc cài bạn 
+					đặt tên khác, hãy thay bằng tên PDB của bạn
+					 => để chắc ăn lúc đó trên cmd gõ lệnh 
+					 
+							SELECT name, open_mode FROM v$pdbs;
+							
+					 --> nó hiện thị tên mặc định ra ở cột name, lấy nó điền vào cho chính xác 		
+					 ).
+					
+					
+		  Bước 1.4: Gõ câu lệnh SQL quyết định để vừa ĐỔI MẬT KHẨU vừa MỞ KHÓA user HR:
+		  
+					ALTER USER hr IDENTIFIED BY hr ACCOUNT UNLOCK;
+					
+					(Lúc này Oracle sẽ báo: "User altered." -> Nghĩa là thành công!).
+					
+					=> Nếu hệ thống báo lỗi User HR does not exist (nghĩa là bạn đang xài bản XE 
+					đời mới không có sẵn), bạn gõ tiếp các lệnh này để tự tạo ra tài khoản HR trống					
+					=>  Tạo mới tài khoản hr nếu chưa có:
+
+						CREATE USER hr IDENTIFIED BY hr;
+						GRANT connect, resource, create view TO hr;
+						ALTER USER hr QUOTA UNLIMITED ON users;
+					
+     	
+		  Bước 1.5: Gõ lệnh `exit` để thoát khỏi CMD. Nhiệm vụ của CMD đến đây là HẾT.
+
+		------------------------------------------------------------------------
+		ĐỀ MỤC 2: GIAI ĐOẠN 2 - TẠO CONNECTION HR TRÊN ORACLE SQL DEVELOPER
+		------------------------------------------------------------------------
+		* Giải thích lý do: Nhiều bạn lầm tưởng phải tạo một connection bằng tài 
+		  khoản SYSTEM rồi vào đó gõ lệnh mở khóa. Cách đó rất dễ lỗi quyền. 
+		  Sau khi đã mở khóa ở ĐỀ MỤC 1 bằng CMD rồi, tài khoản HR đã hoàn toàn "sống 
+		  lại". Bạn chỉ việc tạo thẳng một Connection mang tên HR để dùng lâu dài.
+
+		* Các bước thực hiện chi tiết trên phần mềm Oracle SQL Developer:
+		  Bước 2.1: Mở phần mềm Oracle SQL Developer lên.
+		  
+		  Bước 2.2: Nhìn sang góc trái, bấm vào nút dấu cộng màu xanh (+) (New Connection).
+		  
+		  Bước 2.3: Điền các thông số trong bảng hiện ra chính xác như sau:
+					- Name (Tên kết nối): Đặt tên tùy ý (Ví dụ: Oracle_HR)
+					- Authentication Type: Chọn "Default"
+					- Username: Nhập chữ "hr" (chữ thường)
+					- Password: Nhập chữ "hr" (mật khẩu ta vừa đặt ở Bước 1.4)
+					- Tích chọn vào ô "Save Password" để lần sau không phải nhập lại.
+					
+		  Bước 2.4: Xuống phần thông số mạng ở phía dưới:
+					- Connection Type: Chọn "Basic"
+					- Hostname: Gõ "localhost" (nếu cài trên máy bạn)
+					- Port: Gõ "1521" (mặc định của Oracle)
+					- Phần lựa chọn bên dưới: Chọn mục **Service Name** (KHÔNG CHỌN SID).
+					- Service Name: XEPDB1 (đối với bản XE)
+					
+		  Bước 2.5: Bấm nút **Test** ở góc dưới. 
+					- Nếu trạng thái hiện chữ **Success** màu xanh: Bạn đã thành công! 
+					  Hãy bấm tiếp nút **Connect** để lưu lại cấu hình.
+					- Nếu báo lỗi: Hãy kiểm tra lại xem tên Service Name (orclpdb) đã 
+					  gõ đúng chưa, hoặc xem lại Bước 1.3 bạn đã chuyển vùng chứa chưa.
+					  
+        **ĐẶT BIỆT**
+		  Bước 2.6: nếu như bản XE ORACLE các đời sao không có sẵn Schema HR, OE, PM... thì vẫn 
+		  cứ lm các bước trên y cũ có điều Schema này rỗng thì mình copy code tải từ github bỏ 
+		  vào và chạy lại nội dung source cho Schema HR, OE, PM... thui 
+					- Lấy dữ liệu mẫu (Script SQL) để nạp vào
+						+ Vì bản XE đời mới không có sẵn dữ liệu bên trong, bạn cần chạy một 
+						file script SQL để tự động tạo ra các bảng như employees, departments...
+						+ Bạn hãy copy toàn bộ đoạn mã script chuẩn của Oracle ở link GitHub này:
+						Link Script HR thu gọn: 
+						
+						https://github.com/oracle-samples/db-sample-schemas/blob/main/human_resources/hr_create.sql
+
+						(Bạn chỉ cần click vào link, nhấn Ctrl + A để chọn tất cả rồi Ctrl + C để 
+						copy toàn bộ nội dung file script đó).
+		  	
+
+
+		  Bước 2.7: Nạp dữ liệu vào SQL Developer
+					- Lúc này, bạn Paste (Dán) toàn bộ đoạn script đã copy ở Bước 2.6 vào ô trống.
+					- Nhấn phím F5 (hoặc bấm vào biểu tượng nút Run Script - nút có hình tờ giấy và 
+					hàng chữ nhỏ phía sau đầu phát Play).
+					
+					
+				
+       ------------------------------------------------------------------------					
+        **NOTE** LÀM CHO CÁC HỆ SCHEMA KHÁC NGOÀI HR, NHƯ PM, OE....
+	   ------------------------------------------------------------------------
+		- Để dùng các bản mẫu nâng cao hơn như OE (Order Entry), PM (Product Media), SH (Sales History)... 
+		trên bản Oracle XE (bản rút gọn), quy trình cũng hoàn toàn tương tự như bản HR. 
+		<=> Tuy nhiên, các Schema này có một điểm đặc biệt: Chúng liên kết với nhau.
+			+ Ví dụ: Bản OE (Quản lý đơn hàng) sẽ cần thông tin nhân viên từ bản HR 
+			(Quản lý nhân sự) để biết ai là người bán hàng. Do đó, bạn bắt buộc phải
+			cài bản HR trước rồi mới cài các bản này sau nhé.
+
+		=> Dưới đây là cách lấy và nạp các bản mẫu khác cực kỳ đơn giản trực tiếp trên 
+		Oracle SQL Developer:	
+		
+		# Bước 1: Tạo tài khoản trống cho Schema đó (Dùng tài khoản SYS/SYSTEM)		
+		 - Làm tương tự với hr vậy á
+		 - mở cmd và chạy lệnh 
+		 
+			ALTER SESSION SET CONTAINER = XEPDB1;
+
+			CREATE USER oe IDENTIFIED BY oe;
+			GRANT connect, resource, create view TO oe;
+			ALTER USER oe QUOTA UNLIMITED ON users;
+			-- Cấp quyền cho OE được phép xem bảng của HR (vì hai bên liên kết với nhau)
+			GRANT select ON hr.employees TO oe;
+		
+		# Bước 2: Lấy Script SQL chứa dữ liệu mẫu
+		  - search chatgpt, gemini... lấy link 
+		  - link mẫu 
+		    + link OE: "https://github.com/oracle-samples/db-sample-schemas/blob/main/order_entry/oe_cre.sql"
+			+ link PM .... tự search nha
+			
+		# Bước 3: Nạp dữ liệu vào SQL Developer
+		  - tạo connection mới 
+		  - Điền thông tin đăng nhập của Schema bạn muốn học (Ví dụ học OE):
+			Username: oe
+			Password: oe
+			Service Name: XEPDB1
+			...
+			(y làm với hr)
+			
+		# Bước 4: Bấm Connect để mở ô viết code riêng của oe.
+		# Bước 5: Paste (Dán) toàn bộ đoạn script đã copy ở Bước 2 vào giao diện này.
+		# Bước 6: Nhấn phím F5 để chạy toàn bộ Script.
+		==> CÚI CÙNG XONG HẾT THÌ TEXT TRUY VẤN THỬ COI RA KẾT QUẢ KHÔNG LÀ OK
+	
+		------------------------------------------------------------------------
+		ĐỀ MỤC 3: GIAI ĐOẠN 3 - KIỂM TRA VÀ VIẾT CÂU LỆNH SQL ĐẦU TIÊN
+		------------------------------------------------------------------------
+		* Giải thích lý do: Sau khi bấm Connect, phần mềm sẽ tự mở cho bạn một file 
+		  giao diện trắng (gọi là SQL Worksheet) gắn liền với Connection "Oracle_HR". 
+		  Tại đây, bạn viết code hoàn toàn độc lập, không liên quan gì đến SYSTEM nữa.
+
+		* Các bước thực hiện chi tiết:
+		  Bước 3.1: Gõ lệnh kiểm tra xem các bảng dữ liệu mẫu đã có sẵn chưa:
+		  
+					SELECT table_name FROM user_tables;
+					
+					(Bấm Ctrl + Enter để chạy lệnh. Bạn sẽ thấy danh sách các bảng hiện 
+					ra như EMPLOYEES, DEPARTMENTS, JOBS, LOCATIONS...).
+					
+		  Bước 3.2: Viết câu lệnh truy vấn dữ liệu thực tế để phục vụ đọc sách:
+		  
+					SELECT first_name, last_name, salary 
+					FROM employees 
+					WHERE department_id = 90;
+
+------------------------------------------------------------------------
+III. CÁCH TẢI VÀ CÀI ĐẶT THỦ CÔNG (NẾU KHI CÀI ORACLE BỊ THIẾU)
+------------------------------------------------------------------------
+Nếu khi cài đặt Oracle bạn lỡ bỏ tích chọn "Sample Schemas", hoặc bạn đang 
+dùng một Database trống, hãy làm theo cách này:
+
+Bước 3.1: Tải bộ Source Code chuẩn từ Oracle
+  - Truy cập kho lưu trữ GitHub chính thức của hãng: 
+    https://github.com/oracle-samples/db-sample-schemas
+  - Chọn đúng nhánh (Branch) phù hợp với phiên bản bạn đang dùng (12c, 19c, 23c...).
+  - Tải file Zip về máy và giải nén (Ví dụ giải nén ra thư mục `C:\db-sample-schemas`).
+
+Bước 3.2: Cài đặt Schema bằng SQL Developer hoặc SQL*Plus
+  - Mở CMD và di chuyển vào thư mục chứa mã nguồn vừa tải:
+    cd C:\db-sample-schemas\human_resources
+  - Đăng nhập vào SQLPlus bằng quyền SYSDBA.
+  - Chạy file script chính để khởi tạo toàn bộ cấu trúc bảng và data:
+    @hr_main.sql
+  - Hệ thống sẽ hỏi bạn một số thông tin:
+    + Mật khẩu muốn đặt cho user HR: nhập "hr"
+    + Tablespace mặc định: nhập "USERS"
+    + Temporary tablespace: nhập "TEMP"
+    + Mật khẩu của SYS: nhập mật khẩu Admin của bạn
+    + Tên kết nối mạng (Connect string): nhập "localhost:1521/orclpdb"
+

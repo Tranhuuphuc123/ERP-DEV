@@ -1,0 +1,70 @@
+###########CHỦ ĐỀ: NHỮNG VIỆC CẦN LÀM VÀ HỌC CHO HƯỚNG ERP (JAVA - ORACLE PL/SQL)###########
+
+I. KIẾN THỨC KỸ THUẬT CỐT LÕI (TECHNICAL SKILLS)
+--------------------------------------------------
+1. Oracle PL/SQL (Chiếm 80% thời gian làm việc):
+   - SQL nâng cao: Join, Sub-query, Analytic Functions (Rank, Lead, Lag).
+   - Viết Program Units: Store Procedures, Functions, Packages.
+   - Xử lý dữ liệu lớn: Cursor, Collections (Bulk Collect, Forall).
+   - Tối ưu hóa (Tuning SQL): Đọc Execution Plan để xử lý các câu lệnh chậm.
+
+2. Java trong hệ sinh thái Oracle:
+   - Java Core: OOP, Collections, Exception Handling -> Java kết hợp JDBC
+   hoặc Hibernate để kết nối cơ sở dữ liệu
+   - Framework: Oracle Application Framework (OAF) - dùng để xây dựng trang Web trong Oracle EBS.
+   - Web Services: Cách viết và gọi RESTful API hoặc SOAP để tích hợp hệ thống.
+
+II. CÁC CÔNG CỤ PHẦN MỀM LIÊN QUAN (TOOLSETS)
+--------------------------------------------------
+1. Lập trình Cơ sở dữ liệu:
+   - Oracle SQL Developer (Bạn đã có): Công cụ chính để code và debug PL/SQL.
+   - Toat for Oracle (Lựa chọn thay thế phổ biến trong doanh nghiệp).
+
+2. Lập trình Java & Giao diện:
+   - Oracle JDeveloper: Phiên bản phải khớp hoàn toàn với phiên bản ERP của công ty.
+   - Oracle Forms & Report Builder: Dùng để sửa các màn hình nghiệp vụ cũ (dạng Window).
+
+3. Làm Báo cáo (Reporting):
+   - Oracle BI Publisher Desktop: Cài vào MS Word để thiết kế mẫu in (Hóa đơn, Phiếu kho).
+   - Oracle Reports Builder: Dùng cho các loại báo cáo đời cũ.
+
+III. CÔNG VIỆC CỤ THỂ KHI ĐI LÀM (JOB RESPONSIBILITIES)
+--------------------------------------------------
+1. Customization (Tùy chỉnh): 
+   - Viết thêm logic để đáp ứng yêu cầu riêng của công ty (ví dụ: Tự động khóa tài khoản
+ khi nợ quá hạn).
+2. Reporting (Báo cáo): 
+   - Lấy dữ liệu từ hàng trăm bảng trong ERP để xuất ra file PDF/Excel cho người dùng.
+3. Integration (Tích hợp): 
+   - Kết nối ERP với các phần mềm khác (Máy chấm công, Website bán hàng, App Mobile).
+4. Data Migration (Chuyển đổi dữ liệu): 
+   - Viết script để đẩy dữ liệu cũ vào hệ thống mới mà không làm sai lệch sổ kế toán.
+
+IV. KIẾN THỨC NGHIỆP VỤ (BUSINESS KNOWLEDGE)
+--------------------------------------------------
+Làm ERP không chỉ có code, bạn cần hiểu luồng vận hành của doanh nghiệp:
+1. Quy trình Mua hàng (P2P - Procurement to Pay).
+2. Quy trình Bán hàng (O2C - Order to Cash).
+3. Nghiệp vụ Kho (Inventory) và Kế toán (General Ledger).
+
+V. LỘ TRÌNH TRIỂN KHAI CHO BẠN
+--------------------------------------------------
+- Bước 1: Luyện PL/SQL thật chắc tay trên SQL Developer.(chiếm 60%-80% chìa khóa ERP)
+- Bước 2: Học cách đọc cấu trúc file XML (phục vụ làm báo cáo BI Publisher).
+- Bước 3: Tìm hiểu các khái niệm Java Web cơ bản để chuẩn bị cho OAF.
+ 	  sử dụng java kết nối csdl với JDBC để gọi một Procedure từ Oracle.
+   	  sử dụng postman/swagger để text API để hiểu JSON trả về.
+- Bước 4: Khi đi làm, cài JDeveloper theo phiên bản của dự án cụ thể.
+
+
+
+****NOTE BỔ SUNG CÔNG CỤ & KỸ NĂNG CÒN THIẾU****
+ =>  KỸ NĂNG BẮT BUỘC THÊM:
+   - XML/XSL-FO (Xử lý dữ liệu báo cáo).
+   - Web Services/API (Postman).
+   - Linux cơ bản (Dùng Putty để check log server).
+
+ => PHẦN MỀM BẮT BUỘC CÀI THÊM:
+   - Postman (Test API).
+   - WinSCP/FileZilla (Đẩy code lên Server).
+   - Putty (Quản lý Server).

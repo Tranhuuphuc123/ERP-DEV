@@ -1,0 +1,122 @@
+HƯỚNG DẪN XUẤT FILE SQL (DDL & INSERT DATA) TỪ ORACLE SQL DEVELOPER
+================================================================
+
+ - Tài liệu này hướng dẫn chi tiết các bước xuất cấu trúc bảng (DDL) 
+ cùng toàn bộ dữ liệu (câu lệnh INSERT) từ Oracle Database bằng công 
+ cụ Oracle SQL Developer. Đồng thời giải thích chi tiết ý nghĩa của 
+ từng tùy chọn trong cửa sổ Export Wizard để phục vụ việc lưu trữ 
+ làm tài liệu kỹ thuật.
+
+	PHẦN 1: QUY TRÌNH THỰC HIỆN CÁC BƯỚC XUẤT FILE
+	------------------------------------------------
+	 + Bước 1: Mở cây thư mục kết nối (Connections) ở cột bên trái màn hình. 
+	 Mở rộng kết nối đang làm việc (ví dụ trong ảnh là SQL_STANDARD).
+	 + Bước 2: Tìm đến thư mục "Tables". Bấm dấu cộng (+) để hiển thị danh 
+	 sách các bảng con. Nhấp chuột phải vào bảng cụ thể cần xuất và chọn 
+	 "Export..." (Hoặc chọn Tools -> Database Export... trên thanh menu 
+	 trên cùng nếu muốn xuất hàng loạt bảng).
+	 + Bước 3: Tại cửa sổ "Export Wizard - Step 1 of 5" (giao diện như ảnh
+	 đính kèm), thực hiện cấu hình các thông số chi tiết (xem giải thích ở 
+	 Phần 2).
+	 + Bước 4: Nhấn nút "Browse..." tại mục File để chọn thư mục lưu trữ và 
+	 đặt tên file cụ thể (ví dụ: backup_data.sql). Nhớ đặt lại tên vì mặc 
+	 định hệ thống sẽ để trống tên file thành ".sql".
+	 + Bước 5: Nhấn "Next >" để tiếp tục chọn các đối tượng bảng cụ thể cần
+	 xuất dữ liệu, sau đó tiếp tục nhấn Next cho đến bước cuối cùng và nhấn
+	 "Finish" để hoàn tất.
+
+
+	PHẦN 2: CHI TIẾT Ý NGHĨA CÁC TÙY CHỌN TRONG EXPORT WIZARD
+	--------------------------------------------------------
+
+	I. KHỐI EXPORT DDL (Cấu hình xuất cấu trúc bảng, view,...)
+	 - Ô checkbox lớn "[x] Export DDL": Bắt buộc tích chọn để xuất câu lệnh 
+	 tạo cấu trúc (CREATE TABLE, CREATE VIEW,...). Nếu bỏ tích, file xuất ra 
+	 sẽ hoàn toàn không có lệnh tạo bảng mà chỉ có dữ liệu.
+
+	1. Nhóm các tùy chọn ĐƯỢC TÍCH CHỌN TRONG ẢNH CHUẨN:
+	   - Add BYTE keyword [x]: Tự động thêm từ khóa BYTE vào sau kiểu dữ liệu 
+	   chuỗi chuỗi (Ví dụ: VARCHAR2(50 BYTE)). Giúp Oracle xác định kích thước 
+	   bộ nhớ theo byte, bảo đảm hiển thị và lưu trữ đúng các ký tự tiếng Việt 
+	   có dấu (Unicode), tránh lỗi tràn hoặc lỗi font.
+	   - Add Force to Views [x]: Áp dụng khi xuất các khung nhìn (Views). Tùy 
+	   chọn này thêm từ khóa FORCE (CREATE OR REPLACE FORCE VIEW...), ép buộc 
+	   hệ thống tạo View thành công kể cả khi bảng gốc của View đó chưa được 
+	   tạo tại thời điểm chạy file.
+	   - Grants [x]: Xuất kèm các câu lệnh phân quyền (Ví dụ: GRANT SELECT, 
+	   INSERT, UPDATE ON ... TO ...). Giữ nguyên quyền hạn của các User/Schema 
+	   khác đối với bảng này khi đem sang môi trường mới.
+	   - Partitioning [x]: Nếu các bảng trong database có sử dụng kỹ thuật phân 
+	   vùng dữ liệu lớn (Partition table), hệ thống sẽ giữ nguyên cấu trúc phân 
+	   vùng này trong mã DDL.
+	   - Pretty Print [x]: Tự động căn lề, xuống dòng, định dạng đoạn mã SQL sao 
+	   cho đẹp mắt, rõ ràng và dễ đọc nhất đối với con người.
+	   - Storage [x]: Xuất kèm các thông số cấu hình lưu trữ vật lý chuyên sâu 
+	   của Oracle (như INITIAL, NEXT, MINEXTENTS,...). 
+	   - Tablespace [x]: Chỉ định chính xác tên vùng không gian lưu trữ (Tablespace)
+	   mà bảng này trực thuộc (Ví dụ: TABLESPACE TS_QUANLY).
+	   - Terminator [x]: BẮT BUỘC TÍCH. Tự động thêm dấu chấm phẩy (;) vào cuối mỗi 
+	   câu lệnh SQL. Nếu bỏ tích, các câu lệnh tạo bảng sẽ dính liền vào nhau khiến 
+	   file SQL bị lỗi cú pháp nghiêm trọng khi chạy lại.
+
+	2. Nhóm các tùy chọn KHÔNG TÍCH CHỌN TRONG ẢNH (Lý do vì sao):
+	   - Drops [ ]: Nếu tích, hệ thống sẽ thêm câu lệnh "DROP TABLE tên_bảng;" trước 
+	   lệnh CREATE TABLE. Lý do KHÔNG TÍCH là để an toàn, tránh việc khi chạy file SQL
+	   này vô tình xóa mất bảng và dữ liệu hiện tại đang có trên hệ thống đích.
+	   - Cascade Drops [ ]: Chỉ có tác dụng khi tích ô Drops. Nó sẽ xóa bảng kèm theo 
+	   cơ chế xóa bắc cầu tất cả các ràng buộc khóa ngoại liên quan. KHÔNG TÍCH để tránh
+	   việc vô tình làm ảnh hưởng/lỗi dây chuyền đến các bảng khác.
+	   - Show Schema [ ]: KHÔNG TÍCH. Nếu tích ô này, tên bảng xuất ra sẽ bị dính tên 
+	   User quản lý hiện tại (Ví dụ: CREATE TABLE "PHUC_LEARNING"."NHANVIEN"). Khi đem 
+	   file này sang máy khác chạy trên một User có tên khác (ví dụ: "STUDENT") sẽ bị 
+	   lỗi phân quyền hoặc tạo nhầm vào Schema khác. Bỏ tích giúp file SQL linh hoạt, 
+	   chạy được ở mọi User.
+	   - Dependents [ ]: KHÔNG TÍCH. Tùy chọn này sẽ quét và xuất toàn bộ các đối tượng
+	   phụ thuộc liên quan đến bảng (như Triggers, Indexes, Packages...). Bỏ tích giúp 
+	   file SQL gọn gàng hơn, tập trung duy nhất vào bảng và dữ liệu.
+
+
+=====================================================
+II. KHỐI EXPORT DATA (Cấu hình xuất dữ liệu bảng)
+ - Ô checkbox lớn "[x] Export Data": Bắt buộc tích chọn để phần mềm tiến hành quét
+ và trích xuất dữ liệu bên trong các bảng.
+
+1. Các thông số cấu hình trong ảnh:
+   - Format (insert): Định dạng xuất dữ liệu. Chọn "insert" là bắt buộc để phần mềm 
+   chuyển toàn bộ dữ liệu dạng dòng/cột thành các câu lệnh SQL truyền thống: "INSERT
+   INTO tên_bảng (cột1, cột2) VALUES (giá_trị1, giá_trị2);".
+   - Line Terminator (environment default): Định dạng ký tự xuống dòng của file văn 
+   bản, giữ nguyên theo mặc định của hệ điều hành đang dùng (Windows/Linux).
+   - Show Schema [ ]: KHÔNG TÍCH ở phần Data vì lý do tương tự như phần DDL (Tránh 
+   việc câu lệnh biến thành INSERT INTO "PHUC_LEARNING"."NHANVIEN" gây lỗi khi đổi 
+   tên User ở máy khác).
+   - Include Commit Every [x] (100 Rows): CỰC KỲ KHUYÊN DÙNG. Khi tích chọn, cứ sau 
+   đúng 100 câu lệnh INSERT được tạo ra, hệ thống sẽ tự động chèn thêm một câu lệnh 
+   "COMMIT;". 
+     * Lý do: Giúp dữ liệu được lưu trực tiếp vào ổ cứng theo từng đợt nhỏ, không 
+	 làm quá tải bộ nhớ đệm (Undo/Redo Log) của Oracle khi import file dung lượng lớn, 
+	 đồng thời nếu xảy ra sự cố giữa chừng thì phần dữ liệu trước đó vẫn được lưu lại
+	 an toàn.
+
+
+=====================================================
+III. KHỐI SAVE AS & ĐƯỜNG DẪN LƯU FILE
+	1. Save As (Single File): Xuất toàn bộ cấu trúc và toàn bộ lệnh INSERT của tất 
+	cả các bảng gom chung vào 1 file duy nhất cho dễ quản lý và dễ chạy.
+	2. Compressed [ ]: KHÔNG TÍCH. Nếu tích sẽ xuất ra file nén zip, không đọc trực 
+	tiếp code được ngay.
+	3. Encoding (UTF8): Đảm bảo file được mã hóa theo chuẩn font UTF-8 để không bị 
+	lỗi ký tự tiếng Việt khi mở file hoặc thực hiện chạy file ở các hệ điều hành 
+	khác nhau.
+	4. File: Đường dẫn nơi lưu file. Cần bấm "Browse..." để chọn lại thư mục và đặt 
+	tên rõ ràng thay vì để mặc định đường dẫn trống tên của SQL Developer.
+
+================================================================
+LƯU Ý KHI SỬ DỤNG FILE SQL SAU KHI XUẤT:
+- Do trong ảnh cấu hình chuẩn này bạn CÓ TÍCH chọn ô "Storage" và "Tablespace", 
+nên file SQL thu được sẽ mang cấu hình phần cứng vật lý chính xác của máy bạn. 
+- Khi đem file này sang máy khác chạy, máy đó BẮT BUỘC phải có sẵn tên Tablespace 
+giống hệt máy bạn (ví dụ trong bài của bạn là TS_QUANLY). Nếu máy khác không có 
+Tablespace này, quá trình tạo bảng (DDL) sẽ báo lỗi. (Mẹo: Nếu muốn mang đi chạy 
+mọi máy mà không cần cấu hình Tablespace giống nhau, ở phần DDL hãy BỎ TÍCH hai 
+ô Storage và Tablespace trước khi Export).

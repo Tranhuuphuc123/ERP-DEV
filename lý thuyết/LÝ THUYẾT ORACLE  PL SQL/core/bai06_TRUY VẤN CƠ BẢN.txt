@@ -1,0 +1,111 @@
+********************************************************************************
+>>> ACCESSING DATA ==> CÂU LỆNH TRUY VẤN SELECT (MSSQL - MYSQL - ORACLE)
+********************************************************************************
+
+I. CÂU LỆNH LẤY DỮ LIỆU CƠ BẢN
+------------------------------
+- Câu lệnh: SELECT * FROM [tên_table]
+- Dấu '*': Asterisk, dùng để truy vấn tất cả các cột.
+
+>> PHÉP NỐI CHUỖI (String Concatenation):
+   - MSSQL: Dùng dấu cộng '+'.
+     SELECT FirstName + ' ' + LastName AS 'Full Name' FROM Employees
+   
+   - MySQL: Dùng hàm CONCAT().
+     SELECT CONCAT(FirstName, ' ', LastName) AS 'Full Name' FROM Employees
+   
+ 
+   - Oracle: Dùng dấu gạch đứng kép ||
+     SELECT FirstName || ' ' || LastName AS "Full Name" FROM Employees
+	 
+
+	#############################
+	**** XEM THÔNG TIN BẢNG*****
+		* Xem dữ liệu trong bảng:
+			SELECT * FROM ten_bang;
+
+		* Xem cấu trúc bảng (Các cột, kiểu dữ liệu) trong SQL Developer:
+			
+					DESCRIBE ten_bang;
+					
+							OR
+							
+					DES ten_bang;
+					
+							OR
+			
+					Hoặc dùng phím tắt: Click vào tên bảng và nhấn [Shift + F4].
+					
+
+------------------------------
+II. ĐẶT TÊN CỘT HIỂN THỊ (ALIAS)
+------------------------------
+- Cú pháp: SELECT Tên_Cột AS 'Tên_Mới'
+- Lưu ý: 
+  + MSSQL/MySQL: Dùng nháy đơn '' hoặc nháy kép "" cho tên có khoảng cách.
+  + Oracle: Bắt buộc dùng nháy kép "" nếu tên cột có khoảng cách hoặc muốn giữ chữ hoa/thường.
+
+------------------------------
+III. GIÁ TRỊ TỰ TÍNH (COMPUTING VALUE)
+------------------------------
+- Sử dụng các toán tử: + , - , * , /
+- Ví dụ: SELECT ProductID, UnitPrice * UnitsInStock AS 'ThanhTien' FROM Products
+- Cả 3 nền tảng (MSSQL, MySQL, Oracle) đều hỗ trợ giống hệt nhau ở phần toán tử số học này.
+
+------------------------------
+IV. LOẠI BỎ TRÙNG LẶP (DISTINCT)
+------------------------------
+- Cú pháp: SELECT DISTINCT City FROM Employees
+- Công dụng: Chỉ hiển thị các giá trị duy nhất, không lặp lại. Cả 3 hệ thống dùng chung cú pháp này.
+
+------------------------------
+V. GIỚI HẠN DÒNG TRẢ VỀ (TOP / LIMIT / FETCH) -> [QUAN TRỌNG: KHÁC BIỆT LỚN]
+------------------------------
+
+>> 1. MSSQL: Dùng TOP và PERCENT
+   SELECT TOP 10 * FROM Products
+   SELECT TOP 10 PERCENT * FROM Products
+
+>> 2. MySQL: Dùng LIMIT (Nằm ở cuối câu lệnh)
+   SELECT * FROM Products LIMIT 10;
+   -- (MySQL không có PERCENT trực tiếp, phải tính toán qua subquery).
+
+>> 3. Oracle: Dùng FETCH FIRST (Chuẩn mới) hoặc ROWNUM (Chuẩn cũ)
+   SELECT * FROM Products FETCH FIRST 10 ROWS ONLY;
+
+------------------------------
+VI. SẮP XẾP DỮ LIỆU (ORDER BY)
+------------------------------
+- ORDER BY [Cột]: Tăng dần (Mặc định hoặc thêm ASC).
+- ORDER BY [Cột] DESC: Giảm dần.
+- Cả 3 hệ thống dùng chung.
+
+		SQLSERVER: SELECT TOP 10 * FROM EMPLOYEES ORDER BY SALARY;
+		MSSQL: SELECT * FROM EMPLOYEES ORDER BY SALARY LIMIT 10;
+		ORACLE: SELECT * FROM EMPLOYEES ORDER BY SALARY FETCH FIRST 10 ROWS ONLY;
+
+------------------------------
+VII. LẤY CẢ CÁC DÒNG TRÙNG GIÁ TRỊ (WITH TIES)
+------------------------------
+- MSSQL: SELECT TOP 10 WITH TIES * FROM Products ORDER BY UnitPrice DESC
+- MySQL: KHÔNG hỗ trợ `WITH TIES` trực tiếp. Bạn phải dùng Subquery hoặc Window Function (RANK) để xử lý.
+- Oracle: SELECT * FROM Products ORDER BY UnitPrice DESC FETCH FIRST 10 ROWS WITH TIES;
+
+------------------------------
+VIII. SAO CHÉP BACKUP TABLE (SELECT INTO / CREATE TABLE AS)
+------------------------------
+
+>> 1. MSSQL: Dùng SELECT INTO
+   SELECT * INTO phuc_backup FROM Products
+
+>> 2. MySQL & Oracle: Dùng CREATE TABLE AS
+   CREATE TABLE phuc_backup AS SELECT * FROM Products;
+
+********************************************************************************
+>>> TỔNG KẾT GHI CHÚ CHO PHÚC
+********************************************************************************
+1. Nối chuỗi: MSSQL (+), MySQL (CONCAT), Oracle (||).
+2. Giới hạn dòng: MSSQL (TOP), MySQL (LIMIT), Oracle (FETCH).
+3. Copy bảng: MSSQL (SELECT INTO), MySQL/Oracle (CREATE TABLE AS).
+4. Phép tính số học: Cả 3 hệ thống đều giống nhau, rất thuận tiện để tính 'Thành tiền'.
+********************************************************************************

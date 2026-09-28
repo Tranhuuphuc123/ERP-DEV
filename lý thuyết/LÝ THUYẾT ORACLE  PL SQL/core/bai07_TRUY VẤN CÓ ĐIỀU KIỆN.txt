@@ -1,0 +1,140 @@
+********************************************************************************
+>>>> LỆNH TRUY VẤN SELECT VỚI ĐIỀU KIỆN (WHERE & AGGREGATE FUNCTIONS) <<<<
+********************************************************************************
+
+I. TOÁN TỬ SO SÁNH (OPERATORS)
+------------------------------
+- Các toán tử: =, <>, >, <, >=, <= đều dùng chung cho cả 3 hệ thống.
+- Cú pháp minh họa câu lệnh đầy đủ:
+
+		  SELECT ProductID, ProductName, UnitPrice 
+		  FROM Products 
+		  WHERE UnitPrice >= 50;
+
+- Phủ định (!):
+  + MSSQL: Dùng được != hoặc NOT.
+    VD: 
+	
+		SELECT EmployeeID, FirstName, DepartmentID FROM Employees WHERE DepartmentID != 5;
+		
+  + MySQL: Dùng được != hoặc NOT.
+    VD: 
+	
+		SELECT EmployeeID, FirstName, DepartmentID FROM Employees WHERE DepartmentID != 5;
+		
+  + Oracle: Ưu tiên dùng NOT hoặc <>.
+    VD:
+
+		SELECT EmployeeID, FirstName, DepartmentID FROM Employees WHERE NOT DepartmentID = 5;
+
+II. ĐIỀU KIỆN KHOẢNG (BETWEEN ... AND) & TẬP HỢP (IN)
+----------------------------------------------------
+- Cấu trúc BETWEEN ... AND: Đã bao gồm cả 2 đầu mút (lấy cả giá trị biên).
+  VD: 
+  
+	SELECT ProductID, ProductName, UnitPrice FROM Products WHERE UnitPrice BETWEEN 10 AND 50;
+	
+- Cấu trúc IN: Lọc dữ liệu thuộc một tập hợp danh sách.
+  VD: 
+  
+	SELECT CustomerID, CompanyName, Country FROM Customers WHERE Country IN ('UK', 'USA', 'France');
+	
+ ---> Cả 3 hệ thống (MSSQL, MySQL, Oracle) đều hoạt động giống hệt nhau.
+
+III. TRUY VẤN MẪU TỰ (LIKE) - [QUAN TRỌNG: KHÁC BIỆT LỚN]
+-------------------------------------------------------
+>> 1. Ký tự '%' (Chuỗi) và '_' (Một ký tự):
+   - Cả 3 hệ thống dùng giống nhau.
+   - VD: 
+   
+		SELECT EmployeeID, FirstName FROM Employees WHERE FirstName LIKE 'Hu_';
+		
+     (Tìm 'Huy', 'Hue' có 3 ký tự nhưng không tìm 'Huyen').
+
+>> 2. Ký tự ngoặc vuông [ ] và [^ ] (Chỉ định ký tự):
+   - MSSQL: Hỗ trợ CỰC TỐT.
+     VD: 
+	 
+		SELECT CustomerID, ContactName FROM Customers WHERE ContactName LIKE '[AN]%';
+		
+     (Tìm khách hàng có tên bắt đầu bằng ký tự A hoặc N).
+	 
+   - MySQL & Oracle: KHÔNG hỗ trợ cú pháp [ ] trực tiếp trong LIKE.
+     + Thay thế ở MySQL: Phải dùng toán tử REGEXP.
+       VD: 
+	   
+		SELECT CustomerID, ContactName FROM Customers WHERE ContactName REGEXP '^[AN]';
+		
+     + Thay thế ở Oracle: Phải dùng hàm REGEXP_LIKE.
+       VD: 
+		
+		SELECT CustomerID, ContactName FROM Customers WHERE REGEXP_LIKE(ContactName, '^[AN]');
+
+IV. CÁC HÀM GỘP (COUNT, SUM, AVG, MAX, MIN)
+-------------------------------------------
+- Cú pháp chung: 
+
+  SELECT COUNT(*) AS TotalOrders, SUM(Freight) AS TotalFreight, AVG(Freight) AS AverageFreight 
+  FROM Orders;
+  
+- Cả 3 hệ thống dùng chung.
+- Lưu ý: Các hàm này sẽ BỎ QUA giá trị NULL (trừ COUNT(*)).
+
+V. SỰ KHÁC BIỆT ĐẶC TRƯNG THEO NỀN TẢNG
+--------------------------------------
+
+1. MSSQL (Microsoft SQL Server):
+   - Phân biệt chữ hoa/thường (Case Sensitivity): Phụ thuộc vào Collation khi cài đặt 
+   (thường là không phân biệt).
+   - Có thể dùng toán tử logic !> (không lớn hơn) hoặc !< (không nhỏ hơn).
+     VD: SELECT ProductID, UnitPrice FROM Products WHERE UnitPrice !> 100;
+
+2. MySQL:
+   - Mặc định LIKE trong MySQL không phân biệt chữ hoa chữ thường.
+   - Để ép phân biệt chữ hoa/thường, phải dùng từ khóa BINARY:
+     VD: 
+	 
+		SELECT CustomerID, ContactName FROM Customers WHERE ContactName LIKE BINARY 'A%';
+
+3. Oracle (Hệ thống khắt khe nhất - ERP hay dùng):
+   - Phân biệt chữ hoa/thường: CỰC KỲ KHẮT KHE. 'UK' khác hoàn toàn 'uk'. 
+     Nếu lọc không ra, hãy dùng hàm UPPER để đồng bộ:
+     VD: 
+	 
+		SELECT CustomerID, CompanyName, Country FROM Customers WHERE UPPER(Country) IN ('UK', 'USA');
+
+   - Định dạng ngày tháng: Oracle mặc định là 'DD-MON-RR'. 
+     Nếu dùng BETWEEN cho ngày tháng, Phúc nên dùng hàm TO_DATE để an toàn:
+     VD: 
+	 
+		SELECT OrderID, OrderDate FROM Orders WHERE OrderDate BETWEEN TO_DATE('2026-01-01', 'YYYY-MM-DD') AND TO_DATE('2026-06-30', 'YYYY-MM-DD');
+
+********************************************************************************
+>>> CODE MINH HỌA TỔNG HỢP (CHẠY CHUNG CHUẨN HÓA)
+********************************************************************************
+-- Tìm sản phẩm giá cao nhất của nhà cung cấp ID 1, 2, 3 và giá > 10
+
+	SELECT MAX(UnitPrice) AS [Gia Cao Nhat] 
+	FROM Products 
+	WHERE SupplierID IN (1, 2, 3) AND UnitPrice > 10;
+
+-- Đếm số khách hàng không ở USA
+
+	SELECT COUNT(*) AS [So Luong Khach Hang] 
+	FROM Customers 
+	WHERE Country <> 'USA';
+
+-- Tìm nhân viên có tên bắt đầu bằng H
+
+	SELECT EmployeeID, FirstName, LastName 
+	FROM Employees 
+	WHERE FirstName LIKE 'H%';
+
+********************************************************************************
+>>> GHI CHÚ CHO PHÚC (NOTE)
+********************************************************************************
+- Khi dùng [ ] và [^ ]: Nhớ rằng đây là "đặc sản" của MSSQL. Nếu sau này Phúc làm
+  Web với MySQL mà dùng cú pháp này sẽ bị lỗi ngay. Lúc đó hãy nhớ đến REGEXP.
+- Hàm AVG: Nếu cột có giá trị NULL, nó sẽ không tính dòng đó vào trung bình cộng.
+  Muốn chính xác phải xử lý NULL trước (sẽ học ở bài sau).
+********************************************************************************

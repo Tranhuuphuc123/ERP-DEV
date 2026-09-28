@@ -1,0 +1,112 @@
+======================================================================
+HƯỚNG DẪN CÀI ĐẶT VÀ CẤU HÌNH ORACLE DATABASE: TRUYỀN THỐNG VÀ DOCKER
+======================================================================
+
+TÀI LIỆU NÀY GỒM 2 PHẦN CHÍNH:
+- PHẦN I: Cách cài đặt truyền thống (Oracle XE + SQL Developer)
+- PHẦN II: Cách cài đặt hiện đại (Oracle AI Database 23ai/26ai trên Docker)
+- PHẦN III: Cách quản lý và kết nối song song cả 2 phiên bản
+
+----------------------------------------------------------------------
+PHẦN I: BIỆN PHÁP CÀI ĐẶT TRUYỀN THỐNG (ORACLE XE + SQL DEVELOPER)
+----------------------------------------------------------------------
+Đây là cách cài đặt trực tiếp các dịch vụ Oracle vào hệ điều hành máy tính.
+
+Bước 1: Tải bộ cài đặt (Cần đủ 2 bộ độc lập)
+  1. Tải Oracle Database XE (Hệ quản trị cơ sở dữ liệu - Server):
+     Link: https://www.oracle.com/database/technologies/appdev/xe.html
+  2. Tải Oracle SQL Developer (Công cụ gõ lệnh giao diện - Client/IDE):
+     Link: https://www.oracle.com/database/sqldeveloper/technologies/download/
+     * Lưu ý: Nên chọn bản "Windows 64-bit with JDK included" để không cần cài thêm Java.
+
+Bước 2: Cài đặt Oracle Database XE (Server)
+  1. Giải nén file Oracle Database XE vừa tải về.
+  2. Nhấp đúp vào file `setup.exe` để bắt đầu cài đặt.
+  3. Nhấn Next, chấp nhận điều khoản.
+  4. ĐẾN BƯỚC ĐẶT MẬT KHẨU (Database Password): Hãy nhập mật khẩu của bạn 
+(Ví dụ: 123456) và PHẢI NHỚ mật khẩu này. Đây là mật khẩu cho tài khoản 
+quản trị hệ thống (SYS, SYSTEM).
+  5. Nhấn Next -> Install và đợi hệ thống chạy xong.
+
+Bước 3: Khởi chạy Oracle SQL Developer (Giao diện)
+  1. Giải nén file Oracle SQL Developer đã tải ở bước 1.
+  2. Tìm file `sqldeveloper.exe` bên trong thư mục vừa giải nén.
+  3. Nhấp chuột phải vào file `sqldeveloper.exe` -> Chọn "Send to" -> "Desktop 
+(create shortcut)" để đưa icon ra màn hình chính cho tiện sử dụng.
+  4. Mở phần mềm lên để tiến hành code PL/SQL.
+
+Bước 4: Tạo kết nối đầu tiên (Kết nối vào bản XE truyền thống)
+  1. Trong giao diện SQL Developer, nhấn vào dấu [+] màu xanh bên góc trái.
+  2. Điền thông số kết nối:
+     - Name: Oracle_Local_XE (hoặc tên tùy ý)
+     - Username: system
+     - Password: Mật khẩu bạn đã đặt ở Bước 2.
+     - Hostname: localhost
+     - Port: 1521
+     - Tích chọn "Service Name", điền là: xe
+  3. Nhấn Test -> Trả về "Success" -> Nhấn Connect để hoàn tất.
+
+
+----------------------------------------------------------------------
+PHẦN II: BIỆN PHÁP NÂNG CẤP HIỆN ĐẠI (TÍCH HỢP ORACLE AI DATABASE TỪ DOCKER)
+----------------------------------------------------------------------
+Biện pháp này cài đặt phiên bản Oracle AI mới nhất thông qua môi trường Docker, giúp
+máy tính nhẹ hơn, không bị chạy ngầm dịch vụ nặng và dễ dàng quản lý.
+
+Bước 1: Chuẩn bị môi trường Docker
+  1. Tải và cài đặt phần mềm Docker Desktop từ trang chủ: https://www.docker.com/
+ -> lưu ý: tải và cài đặt docker chính xác ntn thì coi phần kiến thức hướng dẫn cài 
+đặt docker bên mục học về docker ở ổ D
+  2. Mở Docker Desktop lên và đảm bảo biểu tượng con cá voi ở góc dưới màn hình 
+chuyển sang màu xanh lá cây (Trạng thái Running).
+
+Bước 2: Tải và chạy Oracle 23AI Database (Bản Free mới nhất 23AI) qua CMD
+  Mở công cụ Command Prompt (CMD) trên máy tính Windows và chạy duy nhất câu lệnh sau để Docker tự tải và cấu hình:
+(lưu ý: thì dòng cúi lệnh ..database/free:latest chính là bản version database oracle 23c/23AI bản mới nhất hiện tại )
+
+docker run -d --name oracle_docker_ai -p 1522:1521 -e ORACLE_PASSWORD=Huuphuc1995ct -v D:/program_files/ORACLEDATA23AI:/opt/oracle/oradata container-registry.oracle.com/database/free:latest
+
+  *Giải thích thông số quan trọng cần lưu ý:*
+  - `--name oracle_docker_ai`: Đặt tên cho container trên Docker.
+  - `-p 1522:1521`: ĐỔI CỔNG RA THÀNH 1522 (Cổng gốc bên trong vẫn là 1521 nhưng ánh xạ ra ngoài là 1522 để KHÔNG BỊ XUNG ĐỘT với bản 21c/XE truyền thống đang dùng cổng 1521 trên máy).
+  - `-v D:/programe_files/ORACLEDATA23AI:/opt/oracle/oradata`: chọn ổ đĩa lưu database oracle 21ai mới này
+  (lưu ý: ORACLEDATA23AIlà tên mình đăt nhớ đặt và chép vào lệnh cho đúng)
+  - `-e ORACLE_PASSWORD=Huuphuc1995ct`: Đặt mật khẩu quản trị cho bản Docker này (Thay YourPassword123 bằng mật khẩu của bạn).
+
+Bước 3: Kiểm tra trạng thái khởi động của Database
+  Trong màn hình CMD, gõ lệnh sau để xem tiến độ khởi động:
+  
+  docker logs -f oracle_docker_ai
+  
+  Khi nào màn hình xuất hiện dòng chữ: "DATABASE IS READY TO USE!" tức là database đã sẵn sàng. Nhấn tổ hợp phím Ctrl + C để thoát màn hình theo dõi.
+
+
+----------------------------------------------------------------------
+PHẦN III: GỌI VÀ SỬ DỤNG DATABASE DOCKER TRONG SQL DEVELOPER TRƯỚC ĐÓ
+----------------------------------------------------------------------
+Bạn KHÔNG CẦN bỏ bản Database 21c cũ. Bạn dùng chính phần mềm SQL Developer đã cài ở Phần I để quản lý song song cả 2 Database cùng một lúc.
+
+Các bước kết nối vào bản Docker AI mới:
+  1. Mở phần mềm Oracle SQL Developer cũ trên máy tính lên.
+  2. Nhấn vào dấu [+] màu xanh bên góc trái để tạo thêm 1 kết nối mới (nằm song song với kết nối cũ).
+  3. Điền chính xác các thông số của bản Docker như sau:
+     - Name: Oracle_Docker_AI (Đặt tên phân biệt với bản cũ)
+     - Username: system
+     - Password: Mật khẩu bạn đã cấu hình ở lệnh Docker (Ví dụ: YourPassword123)
+     - Connection Type: Basic
+     - Hostname: localhost
+     - Port: 1522 (LƯU Ý: Phải điền 1522 chứ không phải 1521)
+     - Tích chọn "Service Name", điền chính xác là: FREE (Bản AI mới có tên dịch vụ mặc định là FREE thay vì XE).
+  4. Nhấn nút Test ở góc dưới -> Nếu hiển thị "Status: Success" -> Nhấn Connect.
+
+LÚC NÀY, TRÊN GIAO DIỆN SQL DEVELOPER CỦA BẠN SẼ CÓ 2 KẾT NỐI:
+- Kết nối 1 (Cổng 1521, Service Name: xe): Trỏ vào bản Database cũ trên máy.
+- Kết nối 2 (Cổng 1522, Service Name: FREE): Trỏ vào bản Database AI mới trên Docker.
+
+----------------------------------------------------------------------
+MỘT SỐ LỆNH BỎ TÚI KHI DÙNG DOCKER:
+- Khi tắt máy hoặc không học nữa (Tắt Oracle để nhẹ máy):
+  docker stop oracle_docker_ai
+- Khi muốn mở lại để tiếp tục vào học/code:
+  docker start oracle_docker_ai
+======================================================================

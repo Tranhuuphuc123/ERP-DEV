@@ -1,0 +1,77 @@
+********************************************************************************
+>>> TRUY VẤN SELECT NÂNG CAO VỚI GROUP BY & SUBQUERY (MSSQL - MYSQL - ORACLE)
+********************************************************************************
+
+I. NHÓM DỮ LIỆU (GROUP BY)
+--------------------------
+- Cấu trúc: SELECT Cột, COUNT(*) FROM Ten_Bang GROUP BY Cột
+- Quy tắc chung: Tất cả các cột xuất hiện ở SELECT (mà không nằm trong hàm gộp như SUM, COUNT) 
+thì BẮT BUỘC phải nằm trong GROUP BY.
+- Cả 3 nền tảng (MSSQL, MySQL, Oracle) đều tuân thủ quy tắc này.
+  (Riêng MySQL bản cũ có thể lỏng lẻo hơn, nhưng Phúc nên tập viết chuẩn cho cả 3 hệ).
+
+--------------------------------------------------------------------------------
+II. ĐIỀU KIỆN NHÓM (HAVING)
+---------------------------
+- Tại sao dùng HAVING thay vì WHERE?
+  + WHERE: Lọc dữ liệu TRƯỚC khi nhóm (lọc các dòng thô).
+  + HAVING: Lọc dữ liệu SAU khi đã nhóm (lọc các kết quả của SUM, COUNT, AVG...).
+- Ví dụ: SELECT CustomerID, COUNT(*) FROM Orders 
+        GROUP BY CustomerID 
+        HAVING COUNT(*) >= 10
+- Cả 3 nền tảng dùng giống hệt nhau.
+
+--------------------------------------------------------------------------------
+III. TỔNG HỢP NÂNG CAO (ROLLUP & CUBE) -> [QUAN TRỌNG: KHÁC BIỆT CÚ PHÁP]
+--------------------------------------------------------------------------------
+
+>> 1. MSSQL: Dùng từ khóa WITH hoặc hàm
+   - Cú pháp: GROUP BY Cột1, Cột2 WITH ROLLUP (Hoặc WITH CUBE)
+   - MSSQL còn hỗ trợ hàm mới: GROUP BY ROLLUP(Cột1, Cột2)
+
+>> 2. MySQL: Chỉ hỗ trợ ROLLUP (Không hỗ trợ CUBE trực tiếp)
+   - Cú pháp: GROUP BY Cột1, Cột2 WITH ROLLUP
+   - MySQL dùng ROLLUP để tính tổng con (subtotals) và tổng đại trà (grand total) ở cuối danh sách.
+
+>> 3. Oracle: Dùng hàm trong GROUP BY
+   - Cú pháp: GROUP BY ROLLUP(Cột1, Cột2) hoặc GROUP BY CUBE(Cột1, Cột2)
+   - Oracle không dùng từ khóa "WITH ROLLUP" như MySQL/MSSQL cũ.
+
+--------------------------------------------------------------------------------
+IV. TRUY VẤN CON (SUBQUERY)
+---------------------------
+- Khái niệm: Lấy kết quả của câu lệnh này làm đầu vào (điều kiện) cho câu lệnh kia.
+- Ví dụ: Tìm sản phẩm đắt nhất kèm thông tin chi tiết.
+  SELECT * FROM Products 
+  WHERE UnitPrice = (SELECT MAX(UnitPrice) FROM Products)
+
+[!] PHÂN BIỆT ĐẶC TRƯNG:
+    - MSSQL/Oracle: Rất khắt khe, nếu Subquery trả về nhiều hơn 1 dòng mà bạn dùng dấu "=" sẽ 
+    bị lỗi ngay (Phải dùng IN).
+    - MySQL: Hỗ trợ tốt, nhưng lưu ý hiệu năng (Performance) khi Subquery nằm trong bảng dữ liệu
+ quá lớn.
+
+--------------------------------------------------------------------------------
+V. SO SÁNH TỔNG QUAN GIỮA 3 NỀN TẢNG
+--------------------------------------------------------------------------------
+
+| Tính năng       | MSSQL                      | MySQL                     | Oracle                     |
+|-----------------|----------------------------|---------------------------|----------------------------|
+| GROUP BY        | Chuẩn SQL                  | Chuẩn SQL                 | Chuẩn SQL                  |
+| HAVING          | Chuẩn SQL                  | Chuẩn SQL                 | Chuẩn SQL                  |
+| ROLLUP          | WITH ROLLUP / ROLLUP()      | WITH ROLLUP               | ROLLUP()                   |
+| CUBE            | WITH CUBE / CUBE()          | Không hỗ trợ trực tiếp    | CUBE()                     |
+| Subquery        | Hỗ trợ mạnh                | Hỗ trợ mạnh               | Hỗ trợ cực mạnh            |
+
+********************************************************************************
+>>> GHI CHÚ CHO PHÚC (NOTE)
+********************************************************************************
+1. Lưu ý MySQL & ROLLUP: MySQL thường đặt dòng tổng cộng (Grand Total) có giá trị 
+   là NULL ở cột tên nhóm. Phúc có thể dùng hàm `IFNULL` hoặc `COALESCE` để đổi 
+   chữ NULL đó thành chữ "Tổng cộng" cho đẹp báo cáo.
+2. Với Subquery: Khi làm ERP (như Oracle), Subquery thường dùng trong lệnh 
+   UPDATE hoặc INSERT để đồng bộ dữ liệu giữa các phân hệ.
+3. CUBE vs ROLLUP: 
+   - ROLLUP: Tính tổng theo thứ tự từ phải sang trái (phân cấp).
+   - CUBE: Tính tất cả các tổ hợp có thể có (đa chiều).
+********************************************************************************

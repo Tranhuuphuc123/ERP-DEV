@@ -1,0 +1,79 @@
+***************TÌM HIỂU VỀ TRUY VẤN NÂNG CAO VỚI MERGE*******************
+
+-Khái niệm: MERGE có 3 chức năng chính trong cùng 1 lệnh đó là , thường dùng MERGE khi có 2 bảng trở lên
+ + Insert: cập nhật thêm dữ liệu
+ + Update: sữa thêm dữ liệu
+ + delete: xóa dữ liệu, có quyền giữ hoặc xóa đối với MERGE
+
+
+===> MERGE là chức năng gộp 2 table lại với nhau do cấu trúc khá tự do nên không có khuôn mẫu nhất định
+do đó khi MERGE ta theo cấu trúc và tùy biến với 2 điều kiện phụ la matched và not matched, nghĩa là khi
+2dk khớp và không khớp (tham khảo thêm bên mục: Query_sql/Aptech08_Slectnangcao_merge.sql)
+
+
+-----> giải thích rõ hơn là khi MERGE thì sẽ xét dựa trên khóa chính khi lk , và suy luận luôn tất cả các đk 
+phụ kèm theo: 
+  ++ cái nào mà từ khóa chính nó khớp ở 2 bên thì mình xét theo matched(nếu tp phụ bên trong nó khác thì then 
+  update...)
+  ++ cái nào mà có ở target mà không có ở source thì xét à not matched by target
+  ++ cái nào có ở source mà không có ở target thì xét theo not matched by source
+ ==> tất cả dữ liệu kèm theo khi muốn cập nhật update hay delete thì chèn sau then
+ vd: then update
+     then delete 
+
+
+ ***Note: (xem thêm bên phần query để hiểu rõ hơn)
+
+
+
+
+>>>> Cấu Trúc:
+   MERGE tên_table1 as target
+   USING tên_table2 as source
+   ON target.maID =  source.maID
+
+   ---> 'maID' đc hiểu là id chung nào đó đc xác định để lk 2 bảng giống với kiểu khai báo 
+   bên Join giữa 2 table
+   ----> ta phải xác định xem table nào là source table nào là target, vì chức năng của MERGE 
+   là đổ và gộp từ source vào target.
+
+
+   vd: 
+
+      xem phần code Query_sql/ Aptech08_Slectnangcao_merge.sql
+
+
+
+
+*** GIẢI THÍCH CHI TIẾT CHỨC NĂNG MERGE:
+
+ ---> LƯU Ý: ĐÂY LÀ CHỨC NĂNG THỰC THI Ở SERVER
+-- Merge là gộp 2 hay nhiều table với nhau: Chức năng chính là đổ source(table nguồn muốn đổ) và gộp vào 
+-- target(table đích chứa dl khi gộp) đòng thời thực thi insert, update, delete
+
+--> ++ Insert: tiến hành insert dl từ source vào target (ở đây là dl mà ở source có mà ở target hông có)
+--           vd: tble1: 1 2 3 4   tble2: 2 3 5  ở đẩy merge tble1-> tble2, thì nó tiển hành insert ~ 1 4 (tức những giá trị
+--           trùg lặp thì không nói), những gtri mà ở source có mà ở target ko có thì nó sẽ insert vào-> tble2: 1 2 3 4 5      
+
+---> ++ Update: giả dụ merge tble1-> tble2, tble1 có phần tử 2 và tble 1 cũng có pt 2.. tuy nhiên pt2 ở tble1 có 2 giá trk 2.1 
+-- 2.2 còn pt2 ở tble 2 có 1 giá trị 2.3... vậy cùng là phần tử số 2 nhưng lại kahcs tp bên trong thì lúc đi Merge target sẽ dùng
+-- chức năng update để cập nhật lại sao cho khi đổ dl từ tble1->tble2 thì pt 2 đó phải đc update lại đầy đủ gồm; 2.1 2.2 2.3
+
+--> ++ delete: xóa ở target ở th 1 insert thì tble1-> tble2: đổ giá trị 1 4=> tble: 1 2 3 4 5 tuy nhiệ giá trị 5 chỉ có ở target
+-- mà không có ở source nên nó sẽ tiến hành xóa đi 5==> tbale2: 1 2 3 4
+
+--->>>tóm lại tble1 ; 1 2 3 4 , tble2: 2 3 5 khi muốn merge tble1 -> tble2 thì tble1 là source còn tble2 là targer
+--->>> lúc này nó sẽ tiên hành insert, update, delele-> insert là thêm ! cái mà ở source có mà targer chưa có gộp vào cho đủ
+-->> còn những cái ở cả 2 đều có mà chi tiết bên trong khác thì update cho đủ.. còn cái mà ở target có mà source không có thì
+-->> nó sẽ xóa đi ==> tble2 sau khi đc merge: 1 2 3 4....
+--======> Lưu ý là inserrt update hay delete đi là quyền quyết định ở lập trình viên.. nghĩa là không phải khi merge thì mặc 
+-- nó sẽ thực thi 3 chức năng trên mà insert ntn, update ntn, delete ở target hay không đều do chúng ta qui định trong code
+
+
+
+****************************************************************************************************
+>>>>> COMMON TABLE EXPRESSIONS (CTEs)<<<<<<
+
+
+- Gọi là một tập kết quả tạm thời, nghĩa là bảng tạm thời do chúng ta thực thi câu lệnh mà sinh ra
+sau khi thực hiện lệnh thực thi xong thì bảng sẽ mất đi

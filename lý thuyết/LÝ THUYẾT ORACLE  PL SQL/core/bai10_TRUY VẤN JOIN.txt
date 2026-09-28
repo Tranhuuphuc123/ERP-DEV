@@ -1,0 +1,100 @@
+================================================================================
+           TÀI LIỆU TRUY VẤN NÂNG CAO VỚI JOINS (SO SÁNH 3 HỆ CƠ SỞ DỮ LIỆU)
+================================================================================
+
+I. KHÁI NIỆM CHUNG VỀ CÁC LOẠI JOINS
+--------------------------------------------------------------------------------
+- Định nghĩa: Joins là cách liên kết dữ liệu giữa 2 hoặc nhiều bảng dựa trên 
+  mối quan hệ giữa các cột chung (thường là Khóa chính - Khóa ngoại).
+- Phân loại cốt lõi:
+  + Inner Join (Join trong): Chỉ lấy những dòng dữ liệu có ở cả 2 bảng và khớp 
+    hoàn toàn với điều kiện liên kết (Phần giao nhau giữa 2 tập hợp). Những dòng 
+    không khớp ở bảng còn lại sẽ bị loại bỏ.
+  + Outer Join (Join ngoài): Lấy dữ liệu khớp nhau và giữ lại cả dữ liệu không 
+    khớp của bảng làm gốc (điền NULL vào các cột thiếu). Gồm:
+    * Left (Outer) Join: Lấy toàn bộ bảng bên trái làm gốc.
+    * Right (Outer) Join: Lấy toàn bộ bảng bên phải làm gốc.
+    * Full (Outer) Join: Lấy toàn bộ dữ liệu của cả 2 bảng (bên nào thiếu thì điền NULL).
+  + Self Join (Join tự thân): Là trường hợp một bảng tự liên kết với chính nó 
+    (phải đặt bí danh khác nhau cho cùng một bảng) để xử lý cấu trúc phân cấp.
+
+
+================================================================================
+II. SO SÁNH ỨNG DỤNG CÚ PHÁP TRÊN ORACLE, MYSQL VÀ SQL SERVER
+--------------------------------------------------------------------------------
+Dưới đây là cách viết chi tiết cho từng loại Join. Bạn sẽ thấy rõ sự khác biệt 
+về cú pháp và khả năng hỗ trợ giữa 3 hệ quản trị cơ sở dữ liệu trên cùng một ví dụ.
+
+Giả sử hệ thống có 2 bảng dữ liệu:
+- Bảng Categories (Danh mục sản phẩm): CategoryID, CategoryName
+- Bảng Products (Sản phẩm): ProductID, ProductName, CategoryID, UnitPrice
+
+--------------------------------------------------------------------------------
+1. Cú pháp INNER JOIN (Lấy sản phẩm kèm tên danh mục của nó)
+--------------------------------------------------------------------------------
+* Cả 3 hệ thống đều chạy chung một cú pháp chuẩn ANSI:
+
+  SELECT p.ProductID, p.ProductName, c.CategoryName
+  FROM Products p
+  INNER JOIN Categories c ON p.CategoryID = c.CategoryID;
+
+--------------------------------------------------------------------------------
+2. Cú pháp LEFT (OUTER) JOIN (Lấy tất cả danh mục, kể cả chưa có sản phẩm)
+--------------------------------------------------------------------------------
+* Cách viết chuẩn ANSI (Khuyên dùng - Chạy được trên cả 3 hệ thống):
+
+  SELECT c.CategoryName, p.ProductName
+  FROM Categories c
+  LEFT JOIN Products p ON c.CategoryID = p.CategoryID;
+
+* Cách viết đặc thù riêng (Chỉ chạy được trên ORACLE):
+  Oracle hỗ trợ toán tử cổ điển (+) đặt ở phía bảng bị thiếu dữ liệu (bảng Products).
+  MySQL và SQL Server KHÔNG chạy được cú pháp này.
+
+  SELECT c.CategoryName, p.ProductName
+  FROM Categories c, Products p
+  WHERE c.CategoryID = p.CategoryID(+);
+
+--------------------------------------------------------------------------------
+3. Cú pháp FULL (OUTER) JOIN (Lấy tất cả danh mục và tất cả sản phẩm)
+--------------------------------------------------------------------------------
+* Trên ORACLE và SQL SERVER:
+  Hỗ trợ hoàn hảo cú pháp chuẩn trực tiếp:
+
+  SELECT c.CategoryName, p.ProductName
+  FROM Categories c
+  FULL OUTER JOIN Products p ON c.CategoryID = p.CategoryID;
+
+* Trên MYSQL:
+  MySQL KHÔNG hỗ trợ từ khóa FULL OUTER JOIN. Nếu chạy câu lệnh trên sẽ báo lỗi.
+  Để chạy được trên MySQL, bắt buộc phải viết gộp LEFT JOIN và RIGHT JOIN bằng UNION:
+
+  SELECT c.CategoryName, p.ProductName
+  FROM Categories c
+  LEFT JOIN Products p ON c.CategoryID = p.CategoryID
+  UNION
+  SELECT c.CategoryName, p.ProductName
+  FROM Categories c
+  RIGHT JOIN Products p ON c.CategoryID = p.CategoryID;
+
+--------------------------------------------------------------------------------
+4. Cú pháp SELF JOIN (Tìm tên quản lý của nhân viên)
+--------------------------------------------------------------------------------
+* Giả sử bảng Employees có các cột: EmployeeID, EmployeeName, ManagerID.
+* Cú pháp tự liên kết này chạy giống hệt nhau trên cả 3 hệ thống:
+
+  SELECT emp.EmployeeName AS Nhan_Vien, mgr.EmployeeName AS Quan_Ly
+  FROM Employees emp
+  LEFT JOIN Employees mgr ON emp.ManagerID = mgr.EmployeeID;
+
+--------------------------------------------------------------------------------
+5. Cú pháp JOIN nhiều hơn 2 bảng (Sản phẩm - Danh mục - Nhà cung cấp)
+--------------------------------------------------------------------------------
+* Giả sử có thêm bảng Suppliers (SupplierID, SupplierName).
+* Cú pháp ghép nối liên tiếp này chạy giống hệt nhau trên cả 3 hệ thống:
+
+  SELECT p.ProductName, c.CategoryName, s.SupplierName
+  FROM Products p
+  INNER JOIN Categories c ON p.CategoryID = c.CategoryID
+  INNER JOIN Suppliers s ON p.SupplierID = s.SupplierID;
+================================================================================

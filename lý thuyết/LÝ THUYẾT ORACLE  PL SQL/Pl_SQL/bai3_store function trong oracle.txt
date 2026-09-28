@@ -1,0 +1,269 @@
+====================================================================
+KIẾN THỨC TOÀN DIỆN VỀ STORED FUNCTION
+Trọng tâm: Oracle PL/SQL | So sánh: SQL Server (T-SQL) & MySQL
+====================================================================
+
+I. KHÁI NIỆM VÀ TỔNG QUAN
+
+	1. Stored Function là gì?
+	- Là một đối tượng cơ sở dữ liệu chứa tập hợp các câu lệnh logic.
+	- BẮT BUỘC phải trả về một giá trị duy nhất (Scalar) hoặc Bảng (Table).
+	- Có thể nhúng trực tiếp vào các câu lệnh SQL (SELECT, WHERE, HAVING...).
+
+	2. Ưu điểm chính
+	- Tính tái sử dụng cao: Tính toán trực tiếp trong câu lệnh SELECT/DML.
+	- Mô-đun hóa logic: Đóng gói các phép tính toán (thuế, giảm giá, tên đầy đủ).
+	- Tối ưu hóa truy vấn: Giảm thiểu xử lý tính toán ở phía ứng dụng (Backend).
+
+	3. Điểm khác biệt cốt lõi giữa 3 hệ quản trị
+	- Oracle: Hỗ trợ PL/SQL, kiểm soát chặt chẽ quy tắc Side-Effect (không DML trong SELECT Function).
+	- SQL Server: Phân chia rõ Scalar Function (trả về 1 giá trị) và Table-Valued Function (trả về bảng).
+	- MySQL: Cần bật cấu hình `DETERMINISTIC` / `READS SQL DATA` khi tạo Function.
+
+====================================================================
+
+II. CẤU TRÚC VÀ CÚ PHÁP CƠ BẢN
+
+	1. Oracle (Trọng tâm)
+	Cú pháp mẫu:
+	--------------------------------------------------------------------
+		CREATE OR REPLACE FUNCTION fn_ten_function (
+			p_param1 IN kiểu_dữ_liệu
+		)
+		RETURN kiểu_dữ_liệu_trả_về
+		IS -- Hoặc AS
+			v_bien1 kiểu_dữ_liệu;
+		BEGIN
+			-- Thân hàm (Logic tính toán)
+			RETURN v_bien1;
+		EXCEPTION
+			WHEN OTHERS THEN
+				RETURN NULL;
+		END fn_ten_function;
+		/
+	--------------------------------------------------------------------
+
+	Ví dụ Oracle (Tính thuế thu nhập 10%):
+	--------------------------------------------------------------------
+		CREATE OR REPLACE FUNCTION fn_tinh_thue (
+			p_salary IN NUMBER
+		)
+		RETURN NUMBER
+		IS
+			v_tax NUMBER(10,2);
+		BEGIN
+			v_tax := p_salary * 0.10;
+			RETURN v_tax;
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server (T-SQL)
+	--------------------------------------------------------------------
+		CREATE OR ALTER FUNCTION fn_tinh_thue (
+			@p_salary DECIMAL(10,2)
+		)
+		RETURNS DECIMAL(10,2)
+		AS
+		BEGIN
+			DECLARE @v_tax DECIMAL(10,2);
+			SET @v_tax = @p_salary * 0.10;
+			RETURN @v_tax;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL
+	--------------------------------------------------------------------
+		DELIMITER //
+		CREATE FUNCTION fn_tinh_thue (
+			p_salary DECIMAL(10,2)
+		)
+		RETURNS DECIMAL(10,2)
+		DETERMINISTIC
+		BEGIN
+			DECLARE v_tax DECIMAL(10,2);
+			SET v_tax = p_salary * 0.10;
+			RETURN v_tax;
+		END //
+		DELIMITER ;
+	--------------------------------------------------------------------
+
+====================================================================
+
+III. SO SÁNH GIỮA STORED PROCEDURE VÀ STORED FUNCTION
+
++-------------------+-----------------------------------+-----------------------------------+
+| Tiêu chí          | Stored Procedure                  | Stored Function                   |
++-------------------+-----------------------------------+-----------------------------------+
+| Giá trị trả về    | Không bắt buộc (dùng OUT param)   | BẮT BUỘC có lệnh RETURN           |
+| Gọi thực thi      | Lệnh EXEC, CALL, khối PL/SQL      | Dùng trực tiếp trong câu SELECT   |
+| Dùng trong SELECT | KHÔNG THỂ nhúng vào câu SELECT    | CÓ THỂ nhúng vào SELECT, WHERE... |
+| Thao tác DML      | Cho phép INSERT, UPDATE, DELETE   | Hạn chế (Không DML khi gọi trong SELECT) |
+| Mục đích chính    | Thực thi chuỗi tác vụ nghiệp vụ   | Tính toán và trả về giá trị       |
++-------------------+-----------------------------------+-----------------------------------+
+
+====================================================================
+
+IV. TRẢ VỀ TẬP KẾT QUẢ DẠNG BẢNG (TABLE-VALUED FUNCTION)
+
+	1. Oracle (Sử dụng PIPELINED Table Function)
+	--------------------------------------------------------------------
+		-- Tạo Type chứa dữ liệu
+		CREATE OR REPLACE TYPE t_emp_obj AS OBJECT (id NUMBER, name VARCHAR2(100));
+		/
+		CREATE OR REPLACE TYPE t_emp_list AS TABLE OF t_emp_obj;
+		/
+
+		CREATE OR REPLACE FUNCTION fn_get_emp_list
+		RETURN t_emp_list PIPELINED
+		IS
+		BEGIN
+			FOR r IN (SELECT employee_id, employee_name FROM EMPLOYEE) LOOP
+				PIPE ROW(t_emp_obj(r.employee_id, r.employee_name));
+			END LOOP;
+			RETURN;
+		END;
+		/
+		-- Cách gọi: SELECT * FROM TABLE(fn_get_emp_list());
+	--------------------------------------------------------------------
+
+	2. SQL Server (Inline Table-Valued Function)
+	--------------------------------------------------------------------
+		CREATE FUNCTION fn_get_emp_list()
+		RETURNS TABLE
+		AS
+		RETURN (
+			SELECT employee_id, employee_name 
+			FROM EMPLOYEE
+		);
+		-- Cách gọi: SELECT * FROM dbo.fn_get_emp_list();
+	--------------------------------------------------------------------
+
+	3. MySQL
+	- MySQL KHÔNG hỗ trợ Function trả về Bảng trực tiếp (Table Function).
+	- Giải pháp thay thế: Dùng View hoặc Stored Procedure trả về SELECT.
+
+====================================================================
+
+V. QUY TẮC VỀ DML TRONG FUNCTION (SIDE-EFFECTS)
+
+	1. Oracle PL/SQL
+	- Nếu Function được gọi trong SELECT, Function ĐÓ KHÔNG ĐƯỢC chứa lệnh INSERT/UPDATE/DELETE.
+	- Ngoại lệ: Dùng Autonomous Transaction (Giao dịch độc lập) nếu bắt buộc lưu Log.
+	--------------------------------------------------------------------
+		CREATE OR REPLACE FUNCTION fn_log_and_calc (p_val NUMBER)
+		RETURN NUMBER IS
+			PRAGMA AUTONOMOUS_TRANSACTION; -- Cho phép DML trong Function
+		BEGIN
+			INSERT INTO log_table VALUES ('Calculated', SYSDATE);
+			COMMIT;
+			RETURN p_val * 2;
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server
+	- Nghiêm cấm hoàn toàn các câu lệnh DML làm thay đổi trạng thái Database trong Scalar Function.
+
+	3. MySQL
+	- Khai báo đặc tính Function:
+	  + DETERMINISTIC: Trả về cùng kết quả với cùng tham số đầu vào.
+	  + READS SQL DATA: Chỉ đọc dữ liệu, không chỉnh sửa.
+	  + MODIFIES SQL DATA: Cho phép sửa dữ liệu (không thể gọi trong SELECT).
+
+====================================================================
+
+VI. CÁC LỆNH QUẢN LÝ FUNCTION
+
+	1. Oracle
+		- Thực thi trong SQL:
+		  SELECT employee_name, fn_tinh_thue(salary) FROM EMPLOYEE;
+		- Xem nguồn code:
+		  SELECT text FROM user_source WHERE name = 'FN_TINH_THUE';
+		- Xóa Function:
+		  DROP FUNCTION fn_tinh_thue;
+
+	2. SQL Server
+		- Thực thi trong SQL:
+		  SELECT employee_name, dbo.fn_tinh_thue(salary) FROM EMPLOYEE;
+		- Xóa Function:
+		  DROP FUNCTION fn_tinh_thue;
+
+	3. MySQL
+		- Thực thi trong SQL:
+		  SELECT employee_name, fn_tinh_thue(salary) FROM EMPLOYEE;
+		- Xóa Function:
+		  DROP FUNCTION IF EXISTS fn_tinh_thue;
+
+====================================================================
+
+VII. BẢNG SO SÁNH TỔNG HỢP QUICK-REFERENCE
+
++-------------------+---------------------+---------------------+---------------------+
+| Tiêu chí          | Oracle (PL/SQL)     | SQL Server (T-SQL)  | MySQL               |
++-------------------+---------------------+---------------------+---------------------+
+| Khai báo trả về   | RETURN kiểu_data    | RETURNS kiểu_data   | RETURNS kiểu_data   |
+| Từ khóa trả giá trị| RETURN giá_trị      | RETURN giá_trị      | RETURN giá_trị      |
+| Trả về Bảng       | PIPELINED Function  | Table-Valued Func   | Không hỗ trợ        |
+| DML trong SELECT  | Cần AUTONOMOUS_TRANS| Khống cho phép      | Phụ thuộc thuộc tính|
+| Gọi hàm Scalar    | fn_name(param)      | dbo.fn_name(param)  | fn_name(param)      |
++-------------------+---------------------+---------------------+---------------------+
+
+====================================================================
+
+VIII. CÁC HÀM CÓ SẴN (BUILT-IN FUNCTIONS) THƯỜNG DÙNG
+
+1. Nhóm hàm xử lý Chuỗi (String Functions)
+- Oracle: 
+  + NVL(val, default): Thay thế NULL bằng giá trị mặc định[cite: 2].
+  + SUBSTR(str, pos, len): Cắt chuỗi từ vị trí pos với độ dài len[cite: 2].
+  + INSTR(str, substr): Tìm vị trí xuất hiện của chuỗi con[cite: 2].
+  + LENGTH(str): Lấy độ dài chuỗi[cite: 2].
+  + UPPER(str) / LOWER(str): Chuyển chữ hoa / chữ thường[cite: 2].
+  + CONCAT(s1, s2) hoặc s1 || s2: Nối chuỗi[cite: 2].
+
+- SQL Server:
+  + ISNULL(val, default): Thay thế NULL bằng giá trị mặc định[cite: 2].
+  + SUBSTRING(str, pos, len): Cắt chuỗi[cite: 2].
+  + CHARINDEX(substr, str): Tìm vị trí chuỗi con[cite: 2].
+  + LEN(str): Lấy độ dài chuỗi[cite: 2].
+
+- MySQL:
+  + IFNULL(val, default): Thay thế NULL bằng giá trị mặc định[cite: 2].
+  + SUBSTRING(str, pos, len): Cắt chuỗi[cite: 2].
+  + INSTR(str, substr): Tìm vị trí chuỗi con[cite: 2].
+  + LENGTH(str) / CHAR_LENGTH(str): Lấy độ dài chuỗi (byte/ký tự)[cite: 2].
+
+2. Nhóm hàm xử lý Ngày tháng (DateTime Functions)
+- Oracle:
+  + SYSDATE: Lấy ngày giờ hiện tại của hệ thống[cite: 2].
+  + ADD_MONTHS(date, n): Cộng/trừ n tháng vào ngày[cite: 2].
+  + MONTHS_BETWEEN(d1, d2): Tính số tháng chênh lệch giữa 2 ngày[cite: 2].
+  + TRUNC(date): Làm tròn ngày (loại bỏ phần giờ phút giây)[cite: 2].
+  + EXTRACT(unit FROM date): Trích xuất YEAR, MONTH, DAY từ DATE[cite: 2].
+
+- SQL Server:
+  + GETDATE(): Lấy ngày giờ hiện tại[cite: 2].
+  + DATEADD(unit, n, date): Cộng/trừ thời gian[cite: 2].
+  + DATEDIFF(unit, d1, d2): Tính khoảng cách thời gian giữa d1 và d2[cite: 2].
+  + YEAR(date) / MONTH(date) / DAY(date): Trích xuất Năm/Tháng/Ngày[cite: 2].
+
+- MySQL:
+  + NOW() / CURDATE(): Lấy ngày giờ hiện tại / chỉ lấy ngày[cite: 2].
+  + DATE_ADD(date, INTERVAL n unit): Cộng thời gian[cite: 2].
+  + DATEDIFF(d1, d2): Tính số ngày chênh lệch giữa 2 ngày[cite: 2].
+  + EXTRACT(unit FROM date): Trích xuất thành phần ngày[cite: 2].
+
+3. Nhóm hàm Gom nhóm (Aggregate Functions)
+- Chung cho cả 3 hệ quản trị Database (Oracle, SQL Server, MySQL):
+  + COUNT(expression): Đếm số lượng dòng/giá trị không NULL[cite: 2].
+  + SUM(expression): Tính tổng các giá trị số[cite: 2].
+  + AVG(expression): Tính giá trị trung bình[cite: 2].
+  + MIN(expression) / MAX(expression): Tìm giá trị nhỏ nhất / lớn nhất[cite: 2].
+- Lưu ý khi dùng trong Function:
+  + Các hàm Aggregate thường được dùng kết hợp với nhóm câu lệnh `GROUP BY`[cite: 2].
+  + Khi gọi hàm Aggregate trong Scalar Function, câu lệnh `SELECT` bắt buộc phải trả
+  về duy nhất 1 dòng kết quả để gán vào biến[cite: 2].
+
+====================================================================
+

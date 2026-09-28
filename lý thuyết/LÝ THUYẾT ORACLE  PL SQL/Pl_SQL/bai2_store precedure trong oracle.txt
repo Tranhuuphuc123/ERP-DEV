@@ -1,0 +1,501 @@
+====================================================================
+KIẾN THỨC TOÀN DIỆN VỀ STORED PROCEDURE
+Trọng tâm: Oracle PL/SQL | So sánh: SQL Server (T-SQL) & MySQL
+====================================================================
+
+I. KHÁI NIỆM VÀ TỔNG QUAN
+
+	1. Stored Procedure là gì?
+	- Là một tập hợp các câu lệnh SQL và logic lập trình được đóng gói.
+	- Được biên dịch sẵn và lưu trữ trực tiếp trên Database Server.
+	- Giúp thực thi các thao tác dữ liệu phức tạp chỉ qua một lời gọi.
+
+	2. Ưu điểm chính
+	- Hiệu năng cao: Biên dịch một lần, dùng lại nhiều lần, tối ưu execution plan.
+	- Tăng bảo mật: Giấu logic bảng dữ liệu, phân quyền trực tiếp trên Procedure.
+	- Giảm lưu lượng mạng: Gửi một câu lệnh gọi thay vì gửi chuỗi SQL dài.
+	- Dễ bảo trì: Thay đổi logic tập trung tại Database, không cần Re-deploy App.
+
+	3. Điểm khác biệt cốt lõi giữa 3 hệ quản trị
+	- Oracle: Sử dụng ngôn ngữ PL/SQL mạnh mẽ, cấu trúc block strict (DECLARE, BEGIN, END). Bắt buộc câu SELECT phải có INTO hoặc dùng Cursor.
+	- SQL Server: Sử dụng T-SQL, cú pháp linh hoạt, trả về Result Set trực tiếp rất dễ dàng.
+	- MySQL: Dùng cú pháp đơn giản hơn, hỗ trợ cơ bản nhưng cần đổi DELIMITER khi tạo.
+
+====================================================================
+
+II. CẤU TRÚC VÀ CÚ PHÁP CƠ BẢN
+
+	1. Oracle (Trọng tâm)
+	Cú pháp mẫu:
+	--------------------------------------------------------------------
+		CREATE OR REPLACE PROCEDURE sp_ten_procedure (
+			p_param1 IN kiểu_dữ_liệu,
+			p_param2 OUT kiểu_dữ_liệu
+		)
+		IS -- Hoặc AS
+			-- Khai báo biến cục bộ tại đây
+			v_bien1 kiểu_dữ_liệu;
+		BEGIN
+			-- Thân chương trình (Thực thi logic SQL & Control Flow)
+			NULL;
+		EXCEPTION
+			-- Xử lý lỗi (nếu có)
+			WHEN OTHERS THEN
+				DBMS_OUTPUT.PUT_LINE('Lỗi xảy ra!');
+		END sp_ten_procedure;
+		/
+	--------------------------------------------------------------------
+
+	Ví dụ Oracle:
+	--------------------------------------------------------------------
+		CREATE OR REPLACE PROCEDURE sp_chao_nhan_vien (
+			p_emp_id IN NUMBER
+		)
+		IS
+			v_emp_name VARCHAR2(100);
+		BEGIN
+			-- LƯU Ý: Trong Oracle PL/SQL, câu SELECT đơn lẻ bắt buộc phải có INTO
+			SELECT first_name INTO v_emp_name
+			FROM employees
+			WHERE employee_id = p_emp_id;
+
+			DBMS_OUTPUT.PUT_LINE('Xin chào: ' || v_emp_name);
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server (T-SQL)
+	--------------------------------------------------------------------
+		CREATE OR ALTER PROCEDURE sp_chao_nhan_vien
+			@p_emp_id INT
+		AS
+		BEGIN
+			SET NOCOUNT ON;
+			DECLARE @v_emp_name NVARCHAR(100);
+
+			SELECT @v_emp_name = first_name
+			FROM employees
+			WHERE employee_id = @p_emp_id;
+
+			PRINT 'Xin chào: ' + @v_emp_name;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL
+	--------------------------------------------------------------------
+		DELIMITER //
+		CREATE PROCEDURE sp_chao_nhan_vien (
+			IN p_emp_id INT
+		)
+		BEGIN
+			DECLARE v_emp_name VARCHAR(100);
+
+			SELECT first_name INTO v_emp_name
+			FROM employees
+			WHERE employee_id = p_emp_id;
+
+			SELECT CONCAT('Xin chào: ', v_emp_name) AS ThongBao;
+		END //
+		DELIMITER ;
+	--------------------------------------------------------------------
+
+====================================================================
+
+III. QUẢN LÝ BIẾN VÀ KIỂU DỮ LIỆU
+
+	1. Oracle PL/SQL
+		- Khai báo ở phần khai báo (giữa IS/AS và BEGIN).
+		- Hỗ trợ kiểu dữ liệu động `%TYPE` và `%ROWTYPE` rất an toàn.
+		Ví dụ:
+		--------------------------------------------------------------------
+		v_salary employees.salary%TYPE; -- Tự lấy kiểu dữ liệu của cột salary
+		v_emp_row employees%ROWTYPE;   -- Chứa toàn bộ dòng dữ liệu của bảng
+		--------------------------------------------------------------------
+
+	2. SQL Server
+		- Khai báo bằng từ khóa `DECLARE`, biến bắt đầu bằng ký tự `@`.
+		Ví dụ:
+		--------------------------------------------------------------------
+		DECLARE @v_salary DECIMAL(10,2);
+		DECLARE @v_emp_name NVARCHAR(100) = 'Nguyen Van A';
+		--------------------------------------------------------------------
+
+	3. MySQL
+		- Khai báo bằng từ khóa `DECLARE` nằm ngay đầu khối `BEGIN...END`.
+		Ví dụ:
+		--------------------------------------------------------------------
+		DECLARE v_salary DECIMAL(10,2) DEFAULT 0.00;
+		DECLARE v_emp_name VARCHAR(100);
+		--------------------------------------------------------------------
+
+====================================================================
+
+IV. THAM SỐ ĐẦU VÀO VÀ ĐẦU RA (IN, OUT, INOUT)
+
+	1. Oracle (Mẫu truyền tham số OUT)
+	--------------------------------------------------------------------
+	CREATE OR REPLACE PROCEDURE sp_lay_luong (
+			p_emp_id IN NUMBER,
+			p_salary OUT NUMBER
+		)
+		IS
+		BEGIN
+			SELECT salary INTO p_salary
+			FROM employees
+			WHERE employee_id = p_emp_id;
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server
+	--------------------------------------------------------------------
+		CREATE PROCEDURE sp_lay_luong
+			@p_emp_id INT,
+			@p_salary DECIMAL(10,2) OUTPUT
+		AS
+		BEGIN
+			SELECT @p_salary = salary
+			FROM employees
+			WHERE employee_id = @p_emp_id;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL
+	--------------------------------------------------------------------
+		DELIMITER //
+		CREATE PROCEDURE sp_lay_luong (
+			IN p_emp_id INT,
+			OUT p_salary DECIMAL(10,2)
+		)
+		BEGIN
+			SELECT salary INTO p_salary
+			FROM employees
+			WHERE employee_id = p_emp_id;
+		END //
+		DELIMITER ;
+	--------------------------------------------------------------------
+
+====================================================================
+
+V. CẤU TRÚC ĐIỀU KIỆN VÀ VÒNG LẶP
+
+	1. Oracle (PL/SQL)
+	Conditional:
+	--------------------------------------------------------------------
+		IF v_score >= 80 THEN
+			v_grade := 'A';
+		ELSIF v_score >= 65 THEN
+			v_grade := 'B';
+		ELSE
+			v_grade := 'C';
+		END IF;
+	--------------------------------------------------------------------
+	Looping:
+	--------------------------------------------------------------------
+		-- Vòng lặp FOR đếm số cơ bản
+		FOR i IN 1..10 LOOP
+			DBMS_OUTPUT.PUT_LINE('Lần lặp: ' || i);
+		END LOOP;
+
+		-- Vòng lặp WHILE
+		WHILE v_counter < 10 LOOP
+			v_counter := v_counter + 1;
+		END LOOP;
+
+		-- Cursor FOR Loop (CHUẨN THỰC TẾ: Duyệt danh sách bản ghi ngắn gọn & tối ưu)
+		-- Oracle tự động OPEN, FETCH dữ liệu vào biến 'rec', và CLOSE Cursor ngầm.
+		FOR rec IN (
+			SELECT employee_id, first_name, salary 
+			FROM employees 
+			WHERE department_id = 10
+		) LOOP
+			DBMS_OUTPUT.PUT_LINE('NV: ' || rec.first_name || ' - Lương: ' || rec.salary);
+		END LOOP;
+	--------------------------------------------------------------------
+
+	2. SQL Server (T-SQL)
+	Conditional:
+	--------------------------------------------------------------------
+		IF @v_score >= 80
+			SET @v_grade = 'A';
+		ELSE IF @v_score >= 65
+			SET @v_grade = 'B';
+		ELSE
+			SET @v_grade = 'C';
+	--------------------------------------------------------------------
+	Looping (SQL Server chỉ hỗ trợ WHILE):
+	--------------------------------------------------------------------
+		WHILE @v_counter < 10
+		BEGIN
+			SET @v_counter = @v_counter + 1;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL
+	Conditional:
+	--------------------------------------------------------------------
+		IF v_score >= 80 THEN
+			SET v_grade = 'A';
+		ELSEIF v_score >= 65 THEN
+			SET v_grade = 'B';
+		ELSE
+			SET v_grade = 'C';
+		END IF;
+	--------------------------------------------------------------------
+	Looping:
+	--------------------------------------------------------------------
+		WHILE v_counter < 10 DO
+			SET v_counter = v_counter + 1;
+		END WHILE;
+	--------------------------------------------------------------------
+
+====================================================================
+
+VI. XỬ LÝ NGOẠI LỆ VÀ QUẢN LÝ TRANSACTION (TRANSACTION MANAGEMENT)
+
+	1. Oracle (Mạnh mẽ và chi tiết nhất)
+	- Quản lý Transaction: Trong Oracle, mọi thao tác INSERT/UPDATE/DELETE cần COMMIT để lưu
+	  vĩnh viễn hoặc ROLLBACK để hủy bỏ khi gặp sự cố.
+	--------------------------------------------------------------------
+		CREATE OR REPLACE PROCEDURE sp_them_phong_ban (
+			p_dept_id IN NUMBER,
+			p_dept_name IN VARCHAR2
+		)
+		IS
+		BEGIN
+			INSERT INTO departments (department_id, department_name)
+			VALUES (p_dept_id, p_dept_name);
+			
+			-- Xác nhận lưu dữ liệu thành công vào DB
+			COMMIT;
+		EXCEPTION
+			WHEN DUP_VAL_ON_INDEX THEN
+				-- Hoàn tác nếu trùng khóa chính / trùng index duy nhất
+				ROLLBACK;
+				DBMS_OUTPUT.PUT_LINE('Mã phòng ban đã tồn tại!');
+			WHEN OTHERS THEN
+				-- Hoàn tác tất cả thao tác trước đó khi xảy ra lỗi bất kỳ
+				ROLLBACK;
+				DBMS_OUTPUT.PUT_LINE('Lỗi hệ thống: ' || SQLERRM);
+				RAISE; -- Đẩy lỗi ra ngoài ứng dụng gọi Procedure nếu cần
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server (Sử dụng TRY...CATCH)
+	--------------------------------------------------------------------
+		CREATE PROCEDURE sp_them_phong_ban
+			@p_dept_id INT,
+			@p_dept_name NVARCHAR(100)
+		AS
+		BEGIN
+			BEGIN TRY
+				BEGIN TRANSACTION;
+					INSERT INTO departments (department_id, department_name)
+					VALUES (@p_dept_id, @p_dept_name);
+				COMMIT TRANSACTION;
+			END TRY
+			BEGIN CATCH
+				IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+				PRINT ERROR_MESSAGE();
+			END CATCH;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL (DECLARE HANDLER)
+	--------------------------------------------------------------------
+		DELIMITER //
+		CREATE PROCEDURE sp_them_phong_ban (
+			IN p_dept_id INT,
+			IN p_dept_name VARCHAR(100)
+		)
+		BEGIN
+			DECLARE SQLEXCEPTION HANDLER FOR SQLEXCEPTION
+			BEGIN
+				ROLLBACK;
+				SELECT 'Lỗi xảy ra trong quá trình thêm!' AS ErrorMessage;
+			END;
+
+			START TRANSACTION;
+				INSERT INTO departments (department_id, department_name)
+				VALUES (p_dept_id, p_dept_name);
+			COMMIT;
+		END //
+		DELIMITER ;
+	--------------------------------------------------------------------
+
+====================================================================
+
+VII. TRẢ VỀ TẬP KẾT QUẢ (RESULT SET / CURSOR)
+
+	1. Oracle
+	- Oracle KHÔNG tự động trả về chuỗi SELECT ra ngoài màn hình như T-SQL hay MySQL.
+	- Trường hợp 1: Trả danh sách dữ liệu ra bên ngoài App (Java, C#, API) -> Dùng SYS_REFCURSOR.
+	- Trường hợp 2: Duyệt danh sách nội bộ trong Procedure -> Dùng Cursor FOR Loop (Mục V).
+	--------------------------------------------------------------------
+		CREATE OR REPLACE PROCEDURE sp_danh_sach_nv (
+			p_cursor OUT SYS_REFCURSOR
+		)
+		IS
+		BEGIN
+			OPEN p_cursor FOR
+				SELECT employee_id, first_name, salary
+				FROM employees;
+		END;
+		/
+	--------------------------------------------------------------------
+
+	2. SQL Server
+	- Tự động trả về Result Set từ câu lệnh SELECT cuối cùng.
+	--------------------------------------------------------------------
+		CREATE PROCEDURE sp_danh_sach_nv
+		AS
+		BEGIN
+			SELECT employee_id, first_name, salary
+			FROM employees;
+		END;
+	--------------------------------------------------------------------
+
+	3. MySQL
+	- Giống SQL Server, chỉ cần viết câu lệnh SELECT trong procedure.
+	--------------------------------------------------------------------
+		DELIMITER //
+		CREATE PROCEDURE sp_danh_sach_nv ()
+		BEGIN
+			SELECT employee_id, first_name, salary
+			FROM employees;
+		END //
+		DELIMITER ;
+	--------------------------------------------------------------------
+
+====================================================================
+
+VIII. CÁC LỆNH QUẢN LÝ PROCEDURE
+
+	1. Oracle
+		- Thực thi:
+		
+		  EXEC sp_chao_nhan_vien(101);
+		  
+		  -- Hoặc dùng khối vô danh:
+		  
+		  BEGIN sp_chao_nhan_vien(101); END; /
+		  
+		- Xem nguồn code:
+		
+		  SELECT text FROM user_source WHERE name = 'SP_CHAO_NHAN_VIEN';
+		  
+		- Xóa Procedure:
+		
+		  DROP PROCEDURE sp_chao_nhan_vien;
+
+	2. SQL Server
+		- Thực thi:
+		
+		  EXEC sp_chao_nhan_vien @p_emp_id = 101;
+		  
+		- Xóa Procedure:
+		
+		  DROP PROCEDURE sp_chao_nhan_vien;
+
+	3. MySQL
+		- Thực thi:
+		
+		  CALL sp_chao_nhan_vien(101);
+		  
+		- Xóa Procedure:
+		
+		  DROP PROCEDURE IF EXISTS sp_chao_nhan_vien;
+		  
+		  
+====================================================================
+IX. HƯỚNG DẪN BUILD VÀ CHẠY STORED PROCEDURE CỤ THỂ
+====================================================================
+
+	1. Oracle PL/SQL
+
+	  A. Quy trình Build (Biên dịch) & Chạy trên Oracle SQL Developer / DBeaver:
+		 - Bước 1 (Build): Viết câu lệnh CREATE OR REPLACE PROCEDURE... 
+		   Bôi đen toàn bộ đoạn code và nhấn nút Run Script (Phím F5) hoặc Ctrl+Enter.
+		   -> Nếu thành công, màn hình sẽ báo: "Procedure <TEN_SP> compiled".
+		 
+		 - Bước 2 (Chạy):
+		  ##Cách 1 - Nhanh nhất khi đi làm(khuyen khich)
+		  
+			   Bôi đen và chạy 3 dòng sau (F5):
+				 VARIABLE x REFCURSOR;
+				 EXEC sp_danh_sach_nv(:x);
+				 PRINT x;
+				 
+				 
+		   ## Cách 2 - Dùng khối Anonymous Block):
+		   
+			   SET SERVEROUTPUT ON;
+			   DECLARE
+				 v_cur SYS_REFCURSOR;
+				 v_id employees.employee_id%TYPE;
+				 v_name employees.first_name%TYPE;
+				 v_sal employees.salary%TYPE;
+			   BEGIN
+				 sp_danh_sach_nv(v_cur);
+				 LOOP
+				   FETCH v_cur INTO v_id, v_name, v_sal;
+				   EXIT WHEN v_cur%NOTFOUND;
+				   DBMS_OUTPUT.PUT_LINE(v_id || ' - ' || v_name || ' - ' || v_sal);
+				 END LOOP;
+				 CLOSE v_cur;
+			   END;
+			   /
+			   
+
+	  B. Các lỗi thường gặp khi Build & Chạy trên Oracle:
+		 - PLS-00201 (identifier '...' must be declared): Lỗi gõ sai tên Procedure, 
+		   sai tên gói hệ thống (vd: gõ lộn DMBS_OUTPUT) hoặc chưa chạy câu lệnh CREATE PROCEDURE.
+		 - ORA-00942 (table or view does not exist): Bảng không tồn tại trong Database, 
+		   gõ sai tên bảng hoặc chưa chọn đúng Schema chứa bảng.
+		 - ORA-06550 / PLS-00306: Truyền sai số lượng hoặc sai kiểu dữ liệu của tham số.
+
+	--------------------------------------------------------------------
+
+	2. SQL Server (T-SQL)
+
+	  A. Quy trình Build & Chạy trên SSMS (SQL Server Management Studio):
+		 - Bước 1 (Build): Bôi đen đoạn code CREATE OR ALTER PROCEDURE... 
+		   Nhấn F5 (Execute). 
+		   -> Nếu thành công, màn hình báo: "Commands completed successfully."
+		 - Bước 2 (Chạy):
+		   EXEC sp_danh_sach_nv;
+		   -- Nếu có tham số:
+		   EXEC sp_chao_nhan_vien @p_emp_id = 101;
+
+	--------------------------------------------------------------------
+
+	3. MySQL
+
+	  A. Quy trình Build & Chạy trên MySQL Workbench / DBeaver:
+		 - Bước 1 (Build): Nhớ dùng DELIMITER để MySQL không bị nhầm dấu `;` trong thân hàm.
+		   Bôi đen toàn bộ từ DELIMITER // đến DELIMITER ; rồi nhấn Ctrl+Enter (Execute).
+		 - Bước 2 (Chạy):
+		   CALL sp_danh_sach_nv();
+		   -- Nếu có tham số:
+		   CALL sp_chao_nhan_vien(101);
+
+
+
+====================================================================
+X. BẢNG SO SÁNH TỔNG HỢP QUICK-REFERENCE
+====================================================================
+
++-------------------+---------------------+---------------------+---------------------+
+| Tiêu chí          | Oracle (PL/SQL)     | SQL Server (T-SQL)  | MySQL               |
++-------------------+---------------------+---------------------+---------------------+
+| Gọi Procedure     | EXEC / CALL / Block | EXEC / EXECUTE      | CALL                |
+| Ký tự kết thúc    | Slash `/`           | GO (Tùy chọn)       | DELIMITER custom    |
+| Biến cục bộ       | Khối DECLARE/IS     | DECLARE @Var        | DECLARE Var         |
+| Kiểu gán giá trị  | `:=` hoặc INTO      | `SET` / `SELECT`    | `SET` hoặc INTO     |
+| Trả Result Set    | Dùng SYS_REFCURSOR  | SELECT trực tiếp    | SELECT trực tiếp    |
+| Duyệt danh sách   | Cursor FOR Loop     | WHILE + Cursor      | WHILE + Cursor      |
+| Xử lý lỗi         | Khối EXCEPTION      | TRY...CATCH         | DECLARE HANDLER     |
+| Quản lý giao dịch | COMMIT / ROLLBACK   | BEGIN/COMMIT TRANS  | START TRANS/COMMIT  |
+| Kiểu biến động    | `%TYPE`, `%ROWTYPE` | Không hỗ trợ        | Không hỗ trợ        |
++-------------------+---------------------+---------------------+---------------------+

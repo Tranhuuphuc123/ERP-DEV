@@ -1,0 +1,210 @@
+================================================================================
+           CHI TIẾT CÚ PHÁP INSERT - UPDATE - DELETE THEO HỆ THỐNG
+================================================================================
+ => DML: (Data Manipulation Language) - Ngôn ngữ thao tác dữ liệu
+ # định nghĩa:
+  - DML là nhóm các câu lệnh dùng để quản lý và xử lý dữ liệu (các hàng/các dòng bản ghi) 
+  nằm bên trong các cấu trúc bảng đã được tạo bởi DDL. 
+  - Nói cách khác, DML giúp bạn thêm, sửa, xóa phần "ruột" của bảng.
+
+ # Các lệnh DML phổ biến:
+	- INSERT: Chèn thêm dòng dữ liệu mới vào bảng (Ví dụ: INSERT INTO USERS...).
+	- UPDATE: Sửa đổi dữ liệu đang có sẵn ở các dòng 
+	(Ví dụ: UPDATE USERS SET name = 'Phuc' WHERE id = 1;).
+
+	- DELETE: Xóa một hoặc nhiều dòng dữ liệu cụ thể dựa theo điều kiện 
+	(Ví dụ: DELETE FROM USERS WHERE id = 1;).
+
+	- (Lưu ý: Lệnh SELECT lấy dữ liệu đôi khi được xếp vào nhóm DML, đôi khi được 
+	tách riêng thành DQL - Data Query Language. Nhưng khi đi làm, người ta thường 
+	gộp chung vào nhóm thao tác dữ liệu).
+
+ 🚨 Đặc điểm chí mạng của DML trong Oracle:
+	- BẮT BUỘC PHẢI COMMIT HỦY THỦ CÔNG: Dữ liệu sau khi chèn/sửa/xóa bằng lệnh DML 
+	chỉ nằm ở bộ nhớ tạm thời của riêng bạn. Nên mỗi dòng code phải thêm lệnh COMMIT;
+
+	- CÓ THỂ ROLLBACK: Nếu bạn lỡ tay chạy lệnh DELETE xóa nhầm dữ liệu, chỉ cần gõ 
+	ROLLBACK; trước khi tắt máy là dữ liệu sẽ hồi phục lại 100%. Nếu muốn chốt hạ để 
+	lưu vĩnh viễn thì bắt buộc phải gõ COMMIT;.
+  
+ 
+ 
+ 
+
+I. CÂU LỆNH INSERT (THÊM DỮ LIỆU)
+--------------------------------------------------------------------------------
+**NOTE**: Nếu insert đầy đủ các trường values thì khỏi khai báo các trường 
+vallues đó khi viets script INSERT INTO 
+-> Ý LÀ MÌNH CHÈN ĐỦ VALULE CHO TỪNG CỘT THÌ KHÔNG ĐIỀN VÀO SCRIPT NÓ SẼ HIỂU 
+LÀ ĐIỀN ĐỦ THÔNG TIN KHÔNG BẮT LỖI, TRỪ PHI CẦN LOẠI TRỪ CỘT NÀO KHÔNG INSERT 
+VALUES MỚI CẦN GHI RÕ KHI VIẾT SCRIPT INSERT INTO(...KHAI BÁO ĐỦ...)
+
+1. CÔNG THỨC CHUNG (CHÈN 1 DÒNG):
+   INSERT INTO Ten_Bang (Cot1, Cot2) 
+   VALUES (GiaTri1, GiaTri2);
+   => Cả 3 hệ thống MSSQL, MySQL, Oracle đều dùng được cách này.
+
+2. CÔNG THỨC CHÈN NHIỀU DÒNG (DML MULTI-ROW):
+
+   ● VỚI MSSQL & MYSQL: (Dùng dấu phẩy ngăn cách các cặp VALUES)
+     INSERT INTO Ten_Bang (TenCot) 
+     VALUES (N'Dòng 1'), 
+			(N'Dòng 2'), 
+			(N'Dòng 3');
+
+   ● VỚI ORACLE: (Không được dùng dấu phẩy giữa các VALUES)
+     # Cấu trúc INSERT INTO ... SELECT ... UNION ALL dùng cho chèn 
+	  nhiều values vào một table:
+	  
+		INSERT INTO tên_table(tên_cột1, tên_cột1, tên_cột1)
+			SELECT 'value1', 'value2', 'value3' FROM DUAL UNION ALL
+			SELECT 'value1', 'value2', 'value3' FROM DUAL UNION ALL
+			SELECT 'value1', 'value2', 'value3' FROM DUAL;
+		COMMIT; -- Luôn nhớ commit để lưu dữ liệu vĩnh viễn
+		
+	  # Cấu trúc INSERT ALL.. dùng chèn nhiều value vào nhiều table khác nhau	
+		
+		 INSERT ALL 
+		   INTO Ten_Bang1 (TenCot1, TenCot2..) VALUES ('value1', 'value2'.. )
+		   INTO Ten_Bang2 (TenCot1, TenCot2..) VALUES ('value1', 'value2'.. )
+		 SELECT * FROM DUAL;
+		 COMMIT; -- Luôn nhớ commit để lưu dữ liệu vĩnh viễn
+		 
+
+3. VÍ DỤ MẪU INSERT NHIỀU DÒNG VALUES VÀO TABLE:
+   -- MSSQL:
+   INSERT INTO dbo.hocsinh (mahs, ten) 
+   VALUES (1, N'Phúc'), 
+	  (2, N'Thuận');
+
+   -- Oracle t/h insert nhiều values cho nhiều table khác nhau:
+	   INSERT ALL 
+		 INTO hocsinh (mahs, ten) VALUES (102547, 'Phúc')
+		 INTO users (ma_users, ten) VALUES (104551, 'Thuận')
+	   SELECT * FROM DUAL;
+	   COMMIT; -- Phải có lệnh COMMIT và SELECT * FROM DUAL này dữ liệu mới vào máy chủ
+	   
+   -- Oracle t/h insert nhiều values cho một table cố định
+   
+	   INSERT INTO USERS(NAME, EMAIL, ADDRESS) 
+		 SELECT 'Phuong', 'phuong20@gmail.com', 'Cantho' FROM DUAL UNION ALL
+		 SELECT 'Ngoc', 'ngoc20@gmail.com', 'Cantho' FROM DUAL UNION ALL
+		 SELECT 'Hoang', 'hoang26@gmail.com', 'Saigon' FROM DUAL;
+	   COMMIT; 
+	   
+	      --> Phải có lệnh COMMIT và SELECT * FROM UNION DUAL này dữ liệu mới vào máy chủ
+		  --> FROM DUAL UNION ALL:
+					+ DUAL: Hiểu đơn giản là tạo ra một bảng tạm thời chứa values 
+					+ UNION ALL: là toán tử dùng để gộp kết quả của nhiều câu lệnh 
+					SELECT lại với nhau thành một bảng kết quả duy nhất từ trên xuống 
+					dưới (giữ nguyên tất cả các dòng, kể cả dòng trùng nhau).
+	   
+	   
+	 ***NOTE*** 
+		->  Từ bản Oracle 23c trở lên ta hoàn toàn viết Insert values vào table nhiều 
+		bằng cách viết y MySQL 
+		=> lưu ý là thay vì dùng Insert select from dual .... của Oracle cũ từ bản Oracle 
+		23c trở lên ta viết y cách viết của MySQL bình thường thêm COMMIT LÀ ĐC, CÒN CÁC 
+		VER CŨ THÌ KHONG ĐC 
+		<=> VD
+		
+		
+						INSERT INTO USERS (NAME, EMAIL, ADDRESS) 
+						VALUES('Phuong', 'phuong20@gmail.com', 'Cantho'),
+							  ('Ngoc', 'ngoc20@gmail.com', 'Cantho'),
+							  ('Hoang', 'hoang26@gmail.com', 'Saigon');
+						COMMIT;
+						
+						
+
+--------------------------------------------------------------------------------
+II. CÂU LỆNH UPDATE (CẬP NHẬT DỮ LIỆU)
+--------------------------------------------------------------------------------
+
+1. CÔNG THỨC CHUNG:
+   UPDATE Ten_Bang 
+   SET Cot1 = GiaTriMoi, Cot2 = GiaTriMoi 
+   WHERE DieuKien;
+
+2. ĐIỂM KHÁC BIỆT:
+   ● MSSQL: Dùng tiền tố N'...' cho tiếng Việt. Lưu tự động.
+   ● MySQL: Có chế độ Safe Update (chặn update nếu thiếu WHERE khóa chính).
+   ● Oracle: Phải có COMMIT mới lưu thật sự.
+
+3. VÍ DỤ MẪU:
+   -- MSSQL:
+   UPDATE dbo.hocsinh SET ten = N'Phúc Aptech' WHERE mahs = 1;
+
+   -- Oracle:
+   UPDATE hocsinh SET ten = 'Phúc Aptech' WHERE mahs = 1;
+   COMMIT;
+
+--------------------------------------------------------------------------------
+III. CÂU LỆNH DELETE (XÓA DỮ LIỆU)
+--------------------------------------------------------------------------------
+
+1. CÔNG THỨC CHUNG:
+   DELETE FROM Ten_Bang WHERE DieuKien;
+
+2. ĐIỂM KHÁC BIỆT:
+   ● MSSQL: Có thể viết tắt "DELETE Ten_Bang" (bỏ chữ FROM).
+   ● MySQL & Oracle: Bắt buộc phải có chữ FROM.
+   ● Oracle: Bắt buộc gõ COMMIT sau khi xóa.
+
+3. VÍ DỤ MẪU:
+   -- MSSQL:
+   DELETE dbo.hocsinh WHERE mahs = 2;
+
+   -- Oracle:
+   DELETE FROM hocsinh WHERE mahs = 2;
+   COMMIT;
+   
+   TRUNCATE TABLE brands;
+   COMMMIT
+   --> TRUNCATE GIÚP xóa lượt mọt lân hoan toàn value
+
+--------------------------------------------------------------------------------
+IV. TỔNG KẾT NHANH ĐỂ NHỚ (CHEAT SHEET)
+--------------------------------------------------------------------------------
+- MSSQL: N'Tiếng Việt', GetDate(), Tự động lưu.
+- MySQL: 'Tiếng Việt', Now(), Tự động lưu.
+- Oracle: 'Tiếng Việt', Sysdate, Cần gõ COMMIT; và dùng DUAL cho các hàm ảo.
+
+================================================================================
+
+
+V. BẢNG SO SÁNH ĐẶC TRƯNG CỦA CÁC HỆ THỐNG
+--------------------------------------------------------------------------------
+| Đặc điểm        | SQL Server (MSSQL)      | MySQL                   | Oracle                  |
+|-----------------|-------------------------|-------------------------|-------------------------|
+| Tiếng Việt      | N'Nội dung'             | 'Nội dung' (utf8mb4)    | 'Nội dung' (NVARCHAR2)  |
+| Ngày hiện tại   | GETDATE()               | NOW() hoặc CURDATE()    | SYSDATE                 |
+| Xóa dữ liệu     | DELETE FROM Ten          | DELETE FROM Ten         | DELETE FROM Ten         |
+| Xác nhận lưu    | Tự động (Auto-commit)   | Tự động (Auto-commit)   | Phải dùng lệnh COMMIT;  |
+
+
+VI. MÃ MINH HỌA TỔNG HỢP (THỰC CHIẾN)
+--------------------------------------------------------------------------------
+ => phần này thực hành của MSSQL(SQL SERVER)
+USE dulieu02
+GO
+
+-- 1. Thêm dữ liệu (Lưu ý: N'...' cho tiếng Việt)
+INSERT INTO dbo.hocsinh (mahs, ten, gioitinh, diemthi, tienthuong, ngay)
+VALUES (1400253, N'Trần Văn A', 1, 17.5, 200000, '1995-09-22');
+GO
+
+-- 2. Cập nhật nhiều trường cho nữ (gioitinh = 0)
+UPDATE dbo.hocsinh 
+SET tienthuong = 550000, mahs = 14001266 
+WHERE gioitinh = 0;
+GO
+
+-- 3. Xóa học sinh có điểm thấp
+DELETE FROM dbo.hocsinh WHERE diemthi < 15;
+GO
+
+-- 4. Xem kết quả sau khi thực hiện
+SELECT * FROM dbo.hocsinh;
+GO
+================================================================================

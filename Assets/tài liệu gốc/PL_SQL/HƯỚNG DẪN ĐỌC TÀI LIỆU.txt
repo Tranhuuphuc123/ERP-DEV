@@ -1,0 +1,76 @@
+########### CHIẾN LƯỢC KHAI THÁC TÀI LIỆU VÀ LỘ TRÌNH NÂNG CAO ERP DEV ###########
+
+I. CHI TIẾT 02 FILE TÀI LIỆU GỐC BẠN ĐANG CÓ
+--------------------------------------------------
+0. File s_feuerstein_oracle-pl_sql-programming_6th-edition_2014.pdf
+  - vai trò: sách hàn lâm của chuyên gia fuerstein dễ hiểu nhất 
+
+1. File: database-pl-sql-language-reference.pdf
+   - Vai trò: "Từ điển bách khoa" về cú pháp.
+   - Trang chủ gốc: https://docs.oracle.com/en/database/oracle/oracle-database/index.html
+   - Link tải trực tiếp (Bản 19c): https://docs.oracle.com/en/database/oracle/oracle-database/19/lnpls/oracle-database-pl-sql-language-reference.pdf
+   - Cách đọc: Không đọc hết. Dùng Ctrl + F để tra cứu khi cần biết chính xác tham số của một hàm (ví dụ: DBMS_OUTPUT, UTL_FILE).
+
+2. File: b14261.pdf (PL/SQL User's Guide and Reference)
+   - Vai trò: "Giáo trình" dạy tư duy lập trình PL/SQL.
+   - Link gốc từ Oracle (Bản 10g/11g): https://docs.oracle.com/cd/B19306_01/appdev.102/b14261.pdf
+   - Cách đọc: Tập trung học lý thuyết nền tảng tại đây. Hãy đọc kỹ các chương về:
+     + PL/SQL Collections and Records (Mảng và bản ghi).
+     + Packages (Cách đóng gói code - cực kỳ quan trọng trong ERP).
+     + Trigger (Kích hoạt tự động khi dữ liệu thay đổi).
+
+ ==> tóm lại 
+    ## học từ pl/sql programing 6th của feuerstein để hiểu tổng quan trc
+    ## sử dụng file b14261.pdf để học cú pháp, package
+    ## sử dụng file database-pl-sql-language-reference.pdf để tra cứu vì nd đủ 
+    nhưng quá dai và lý thuyết để đọc hiểu về pl/sql, nó giúp giải nghĩa cặn kẽ      
+
+II. 5 CHƯƠNG "SỐNG CÒN" CẦN ĐỌC TRONG TÀI LIỆU ĐỂ ĐI LÀM NGAY
+--------------------------------------------------
+1. PL/SQL Program Units: Cách viết Procedures và Functions (truyền tham số IN, OUT, IN OUT).
+2. Packages: Cách tách biệt Specification (Phần khai báo) và Body (Phần thực thi).
+3. Exception Handling: Cách bẫy lỗi để hệ thống không bị "treo" khi có sự cố.
+4. Collections (Bulk Collect & Forall): Kỹ thuật xử lý hàng loạt giúp code chạy nhanh gấp 10-20 lần.
+5. Cursors: Cách điều khiển luồng dữ liệu khi truy vấn từ SQL.
+
+III. TÀI LIỆU VÀ HƯỚNG DẪN NÂNG CAO SAU NÀY (BỔ SUNG CHO KỸ SƯ ERP)
+--------------------------------------------------
+Ngoài 2 file trên, để trở thành chuyên gia (Senior), bạn cần học thêm:
+
+1. Tối ưu hóa hiệu năng (Performance Tuning):
+   - Tài liệu: Oracle Database SQL Tuning Guide.
+   - Mục tiêu: Học về Index, Execution Plan để xử lý hàng triệu dòng dữ liệu trong vài giây.
+
+2. Kiến thức nghiệp vụ (Business Logic):
+   - Nguồn: Youtube "Oracle Learning" hoặc "Apps2fusion".
+   - Mục tiêu: Hiểu quy trình Mua hàng (P2P), Bán hàng (O2C). Bạn không thể code đúng nếu không hiểu tiền và hàng chạy đi đâu.
+
+3. Tích hợp và API (Integration):
+   - Tài liệu: Oracle XML Developer's Kit Guide.
+   - Công cụ: Postman.
+   - Mục tiêu: Dùng gói DBMS_XMLGEN để xuất dữ liệu XML cho báo cáo hoặc gọi Web Service.
+
+4. Quản lý Server Linux:
+   - Công cụ: Putty, WinSCP.
+   - Mục tiêu: Biết các lệnh Linux cơ bản (cd, ls, tail -f) để kiểm tra Log file trên server khi code bị lỗi.
+
+IV. TỔNG HỢP BỘ PHẦN MỀM "VŨ KHÍ" (TOOLSETS)
+--------------------------------------------------
+1. SQL Developer: Viết và Debug code hàng ngày (Bạn đã có).
+2. BI Publisher Desktop: Cài vào MS Word để vẽ mẫu báo cáo (Hóa đơn, Phiếu kho).
+3. Postman: Test API kết nối ERP với App/Web bên ngoài.
+4. JDeveloper: Dùng cho Java OAF (Khi công ty yêu cầu làm giao diện Web).
+
+V. LỜI KHUYÊN CUỐI CÙNG
+--------------------------------------------------
+Lý thuyết trong 2 file PDF của bạn đã ĐỦ 100%. Đừng đi tìm thêm tài liệu PL/SQL khác nữa. 
+Hãy bắt tay vào viết một Package thực tế ngay hôm nay. 
+Chỉ có việc "Code - Sai - Sửa" mới biến bạn thành Kỹ sư ERP thực thụ.
+"""
+
+# Lưu file với định dạng utf-8 để hiển thị tốt tiếng Việt
+file_path = 'Huong_dan_hoc_ERP_Chuyen_nghiep.txt'
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"File created at: {file_path}")
